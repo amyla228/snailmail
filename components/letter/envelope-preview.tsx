@@ -45,9 +45,9 @@ export function EnvelopePreview({ letter, onNewLetter }: EnvelopePreviewProps) {
       }
     }
     if (!id) return
-    const shareUrl = `${window.location.origin}/l/${id}`
-    const subject = "Remember to paste the link to your letter [DELETE THIS]!"
-    const body = `Open your letter here: ${shareUrl}`
+    const shareUrl = `${window.location.origin}/letter/${id}`
+    const subject = "New Letter from your Pen Pal 💌"
+    const body = `Copy and paste this link into your browser to read my letter:\n${shareUrl}`
     const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
     window.open(gmailUrl, "_blank", "noopener,noreferrer")
   }

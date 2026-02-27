@@ -1,8 +1,9 @@
 "use client"
 
 import { useParams, useRouter } from "next/navigation"
-import { useMemo, useState, useEffect } from "react"
-import { getLetter } from "@/lib/letter-store"
+import { useState, useEffect } from "react"
+import { supabase } from "@/lib/supabase"
+import type { SavedLetterState } from "@/lib/letter-store"
 import { LetterView } from "@/components/letter/letter-view"
 import { cn } from "@/lib/utils"
 
@@ -10,9 +11,39 @@ export default function LetterPage() {
   const params = useParams()
   const router = useRouter()
   const id = typeof params.id === "string" ? params.id : ""
-  const letter = useMemo(() => (id ? getLetter(id) : undefined), [id])
+  const [letter, setLetter] = useState<SavedLetterState | null | undefined>(undefined)
   const [isOpening, setIsOpening] = useState(false)
   const [isOpen, setIsOpen] = useState(false)
+
+  useEffect(() => {
+    if (!id) {
+      setLetter(undefined)
+      return
+    }
+    let cancelled = false
+    async function fetchLetter() {
+      const { data, error } = await supabase
+        .from("letters")
+        .select("content")
+        .eq("id", id)
+        .single()
+      if (cancelled) return
+      if (error || !data?.content) {
+        setLetter(null)
+        return
+      }
+      try {
+        const parsed = JSON.parse(data.content) as SavedLetterState
+        setLetter(parsed)
+      } catch {
+        setLetter(null)
+      }
+    }
+    fetchLetter()
+    return () => {
+      cancelled = true
+    }
+  }, [id])
 
   useEffect(() => {
     if (!isOpening) return
@@ -31,7 +62,15 @@ export default function LetterPage() {
     )
   }
 
-  if (!letter) {
+  if (letter === undefined) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center px-4" style={{ backgroundColor: "#faf7f5", color: "#3a3330" }}>
+        <p className="font-serif text-muted-foreground">Loading letter…</p>
+      </div>
+    )
+  }
+
+  if (letter === null) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-4 px-4" style={{ backgroundColor: "#faf7f5", color: "#3a3330" }}>
         <p className="font-serif text-lg">Letter not found.</p>
