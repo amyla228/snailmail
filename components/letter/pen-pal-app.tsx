@@ -32,7 +32,6 @@ export function PenPalApp() {
         {view === "envelope" && pendingLetter && (
           <EnvelopePreview
             letter={pendingLetter}
-            onDownload={() => {}}
             onNewLetter={handleNewLetter}
           />
         )}

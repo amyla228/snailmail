@@ -2,19 +2,22 @@
 
 import { cn } from "@/lib/utils"
 import type { SavedLetterState } from "@/lib/letter-store"
-import { downloadLetterAsHtml } from "@/lib/export-letter-html"
 
 interface EnvelopePreviewProps {
-  letter: SavedLetterState
-  onDownload: () => void
+  /** Letter state; if it has an id, Send Letter will open Gmail with the share link */
+  letter: SavedLetterState & { id?: string }
   onNewLetter: () => void
 }
 
-export function EnvelopePreview({ letter, onDownload, onNewLetter }: EnvelopePreviewProps) {
-  const handleDownload = () => {
-    downloadLetterAsHtml(letter, `letter-${new Date().toISOString().slice(0, 10)}.html`)
-    onDownload()
+export function EnvelopePreview({ letter, onNewLetter }: EnvelopePreviewProps) {
+  const handleSendLetter = () => {
+    if (!letter.id) return
+    const shareUrl = `${window.location.origin}/l/${letter.id}`
+    const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&su=You've%20Got%20Snail%20Mail!&body=Open%20your%20letter%20here:%20${encodeURIComponent(shareUrl)}`
+    window.open(gmailUrl, "_blank")
   }
+
+  const hasId = Boolean(letter.id)
 
   return (
     <div className="flex flex-col items-center gap-8 w-full max-w-lg mx-auto px-4 animate-fade-in-up min-h-[60vh] justify-center">
@@ -36,7 +39,7 @@ export function EnvelopePreview({ letter, onDownload, onNewLetter }: EnvelopePre
 
           <div className="absolute inset-0 flex flex-col items-center justify-center pt-24">
             <p className="text-sm font-serif text-muted-foreground text-center px-4">
-              Your letter is sealed. Download it to open and read.
+              Your letter is sealed. Send it to open and read.
             </p>
           </div>
 
@@ -59,14 +62,19 @@ export function EnvelopePreview({ letter, onDownload, onNewLetter }: EnvelopePre
       <div className="flex flex-col items-center gap-3 w-full max-w-sm animate-fade-in-up">
         <button
           type="button"
-          onClick={handleDownload}
+          onClick={handleSendLetter}
+          disabled={!hasId}
           className={cn(
             "w-full px-6 py-3 rounded-xl font-serif text-base transition-all border-2",
-            "bg-primary text-primary-foreground border-primary hover:bg-primary/90 shadow-md hover:shadow-lg"
+            "bg-primary text-primary-foreground border-primary hover:bg-primary/90 shadow-md hover:shadow-lg",
+            !hasId && "opacity-50 cursor-not-allowed"
           )}
         >
-          Download Letter
+          Send Letter
         </button>
+        <p className="text-xs text-muted-foreground text-center font-serif">
+          This will open your email with the letter link included.
+        </p>
         <button
           type="button"
           onClick={onNewLetter}
