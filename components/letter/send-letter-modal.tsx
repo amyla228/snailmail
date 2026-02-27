@@ -10,26 +10,78 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog"
 import { cn } from "@/lib/utils"
+import type { SavedLetterState } from "@/lib/letter-store"
+import { supabase } from "@/lib/supabase"
 
 interface SendLetterModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  onSend: (recipient: string) => void
+  /**
+   * Optional: still called after a successful send, for caller bookkeeping.
+   */
+  onSend?: (recipient: string) => void
+  /**
+   * The full current letter state to persist to Supabase.
+   */
+  letter: SavedLetterState
 }
 
 export function SendLetterModal({
   open,
   onOpenChange,
   onSend,
+  letter,
 }: SendLetterModalProps) {
   const [recipient, setRecipient] = useState("")
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (isSubmitting) return
+
     const value = recipient.trim()
-    onSend(value || "A friend")
-    setRecipient("")
-    onOpenChange(false)
+    const recipientValue = value || "A friend"
+
+    try {
+      setIsSubmitting(true)
+
+      const payload = {
+        recipient: recipientValue,
+        state: JSON.stringify(letter),
+      }
+
+      const { data, error } = await supabase
+        .from("letters")
+        .insert(payload)
+        .select("id")
+        .single()
+
+      if (error) {
+        // Log and bail; keep the modal open so the user can retry.
+        console.error("Error inserting letter into Supabase:", error)
+        return
+      }
+
+      const id = data?.id as string | undefined
+      if (!id) {
+        console.error("Supabase insert succeeded but no id was returned.")
+        return
+      }
+
+      if (onSend) {
+        onSend(recipientValue)
+      }
+
+      setRecipient("")
+      onOpenChange(false)
+
+      // Redirect to the public letter route.
+      if (typeof window !== "undefined") {
+        window.location.href = `/l/${id}`
+      }
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   const handleOpenChange = (next: boolean) => {
@@ -73,13 +125,15 @@ export function SendLetterModal({
             </button>
             <button
               type="submit"
+              disabled={isSubmitting}
               className={cn(
                 "rounded-xl px-6 py-2.5 font-serif text-sm",
                 "bg-primary text-primary-foreground hover:bg-primary/90",
-                "transition-colors"
+                "transition-colors",
+                isSubmitting && "opacity-60 cursor-not-allowed"
               )}
             >
-              Send
+              {isSubmitting ? "Sending..." : "Send"}
             </button>
           </DialogFooter>
         </form>
