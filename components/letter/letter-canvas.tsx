@@ -118,8 +118,7 @@ export function LetterCanvas({ onSeal }: LetterCanvasProps) {
   const handleSeal = () => {
     if (!letterText.trim()) return
     const name = recipientName.trim()
-    const comma = name && !name.endsWith(",") ? "," : ""
-    const toLine = name ? `Dear ${name}${comma}` : "Dear …,"
+    const toLine = name ? `Dear ${name}` : "Dear …"
     onSeal({
       text: letterText,
       date: today,
@@ -218,12 +217,6 @@ export function LetterCanvas({ onSeal }: LetterCanvasProps) {
                   }}
                   aria-label="Recipient name"
                 />
-                <span
-                  className={cn(letterBodyClass, fontStyle === "serif" && "italic")}
-                  style={{ color: inkColorMap[inkColor] }}
-                >
-                  ,
-                </span>
               </div>
             </div>
 
@@ -387,8 +380,8 @@ export function LetterCanvas({ onSeal }: LetterCanvasProps) {
             </div>
           ))}
 
-          {/* Add page button — half on letter, half off the bottom edge */}
-          <div ref={pagesEndRef} className="flex justify-center w-full relative z-10" style={{ marginTop: "-28px" }}>
+          {/* Add page button — half on letter, half hanging off */}
+          <div ref={pagesEndRef} className="flex justify-center w-full relative z-10" style={{ marginTop: "-24px" }}>
             <button
               type="button"
               onClick={addPage}
