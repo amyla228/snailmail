@@ -21,8 +21,9 @@ export function EnvelopePreview({ letter, onNewLetter }: EnvelopePreviewProps) {
       setSending(true)
       try {
         const payload = {
-          recipient: letter.recipientName?.trim() || "A friend",
-          state: JSON.stringify(letter),
+          to_name: letter.recipientName?.trim() || "A friend",
+          from_name: letter.signature?.trim() || "",
+          content: JSON.stringify(letter),
         }
         const { data, error } = await supabase
           .from("letters")

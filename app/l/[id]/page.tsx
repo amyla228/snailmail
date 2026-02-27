@@ -17,7 +17,7 @@ export default async function LetterPage({
     return <div>Letter not found 💔</div>
   }
 
-  const letter = JSON.parse(data.state)
+  const letter = JSON.parse(data.content)
 
   return (
     <div style={{ padding: 40 }}>

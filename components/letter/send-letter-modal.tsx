@@ -19,7 +19,7 @@ interface SendLetterModalProps {
   /**
    * Optional: still called after a successful send, for caller bookkeeping.
    */
-  onSend?: (recipient: string) => void
+  onSend?: (toName: string) => void
   /**
    * The full current letter state to persist to Supabase.
    */
@@ -32,22 +32,22 @@ export function SendLetterModal({
   onSend,
   letter,
 }: SendLetterModalProps) {
-  const [recipient, setRecipient] = useState("")
+  const [toNameInput, setToNameInput] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (isSubmitting) return
 
-    const value = recipient.trim()
-    const recipientValue = value || "A friend"
+    const toName = toNameInput.trim() || "A friend"
 
     try {
       setIsSubmitting(true)
 
       const payload = {
-        recipient: recipientValue,
-        state: JSON.stringify(letter),
+        to_name: toName,
+        from_name: letter.signature?.trim() || "",
+        content: JSON.stringify(letter),
       }
 
       const { data, error } = await supabase
@@ -69,10 +69,10 @@ export function SendLetterModal({
       }
 
       if (onSend) {
-        onSend(recipientValue)
+        onSend(toName)
       }
 
-      setRecipient("")
+      setToNameInput("")
       onOpenChange(false)
 
       // Redirect to the public letter route.
@@ -85,7 +85,7 @@ export function SendLetterModal({
   }
 
   const handleOpenChange = (next: boolean) => {
-    if (!next) setRecipient("")
+    if (!next) setToNameInput("")
     onOpenChange(next)
   }
 
@@ -99,21 +99,21 @@ export function SendLetterModal({
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          <label htmlFor="recipient" className="sr-only">
-            Recipient email or name
+          <label htmlFor="to-name" className="sr-only">
+            To (name)
           </label>
           <input
-            id="recipient"
+            id="to-name"
             type="text"
-            value={recipient}
-            onChange={(e) => setRecipient(e.target.value)}
-            placeholder="Email or name (e.g. friend@example.com or Alex)"
+            value={toNameInput}
+            onChange={(e) => setToNameInput(e.target.value)}
+            placeholder="Name (e.g. Alex)"
             className={cn(
               "w-full rounded-xl border border-border bg-background px-4 py-3 font-serif text-foreground",
               "placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
             )}
             autoFocus
-            aria-label="Recipient email or name"
+            aria-label="To (name)"
           />
           <DialogFooter className="gap-2 sm:gap-0">
             <button
