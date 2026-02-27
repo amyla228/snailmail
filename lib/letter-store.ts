@@ -25,6 +25,8 @@ export interface SavedLetterState {
   date: string
   greeting: string
   signature: string
+  /** Recipient name for envelope "To:" (from headline) */
+  recipientName?: string
   inkColor: InkColor
   fontStyle: FontStyle
   decorations: DecoElement[]

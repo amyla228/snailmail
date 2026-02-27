@@ -33,6 +33,7 @@ interface LetterCanvasProps {
 
 export function LetterCanvas({ onSeal }: LetterCanvasProps) {
   const [letterText, setLetterText] = useState("")
+  const [recipientName, setRecipientName] = useState("")
   const [greeting, setGreeting] = useState("")
   const [signature, setSignature] = useState("")
   const [additionalPages, setAdditionalPages] = useState<LetterPage[]>([])
@@ -122,6 +123,7 @@ export function LetterCanvas({ onSeal }: LetterCanvasProps) {
       date: today,
       greeting,
       signature,
+      recipientName: recipientName.trim() || undefined,
       inkColor,
       fontStyle,
       decorations: decorations.map((d) => ({
@@ -189,6 +191,29 @@ export function LetterCanvas({ onSeal }: LetterCanvasProps) {
               </span>
             </div>
 
+            <div className="relative z-[5] px-12 pt-3">
+              <label htmlFor="to-field" className="block text-sm font-serif text-muted-foreground mb-1">
+                To:
+              </label>
+              <input
+                id="to-field"
+                type="text"
+                value={recipientName}
+                onChange={(e) => setRecipientName(e.target.value)}
+                placeholder="Name of recipient"
+                className={cn(
+                  "w-full bg-transparent focus:outline-none placeholder:opacity-25 text-base sm:text-lg",
+                  letterBodyClass,
+                  fontStyle === "serif" && "italic"
+                )}
+                style={{
+                  color: inkColorMap[inkColor],
+                  caretColor: inkColorMap[inkColor],
+                }}
+                aria-label="To (recipient)"
+              />
+            </div>
+
             <div className="relative z-[5] px-12 pt-5">
               <input
                 type="text"
@@ -242,14 +267,6 @@ export function LetterCanvas({ onSeal }: LetterCanvasProps) {
                   caretColor: inkColorMap[inkColor],
                 }}
                 aria-label="Signature"
-              />
-              <div
-                className="mt-1 ml-auto opacity-20"
-                style={{
-                  width: "180px",
-                  height: "1px",
-                  backgroundColor: inkColorMap[inkColor],
-                }}
               />
             </div>
 
