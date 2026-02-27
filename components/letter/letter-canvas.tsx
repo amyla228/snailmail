@@ -45,7 +45,6 @@ export function LetterCanvas({ onSeal }: LetterCanvasProps) {
   } | null>(null)
   const [placePosition, setPlacePosition] = useState({ x: 100, y: 80 })
   const canvasRef = useRef<HTMLDivElement>(null)
-  const pagesEndRef = useRef<HTMLDivElement>(null)
 
   const today = new Date().toLocaleDateString("en-US", {
     year: "numeric",
@@ -87,7 +86,6 @@ export function LetterCanvas({ onSeal }: LetterCanvasProps) {
   const addPage = useCallback(() => {
     const id = `page-${Date.now()}`
     setAdditionalPages((prev) => [...prev, { id, text: "" }])
-    setTimeout(() => pagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 100)
   }, [])
 
   const updatePageText = useCallback((id: string, text: string) => {
@@ -144,10 +142,10 @@ export function LetterCanvas({ onSeal }: LetterCanvasProps) {
 
   return (
     <div className="flex flex-col w-full max-w-2xl mx-auto px-4">
-      {/* Scrollable letter area — extra padding so Seal and + stay above toolbar */}
+      {/* Scrollable letter area — padding so content clears toolbar */}
       <div
         className="flex-1 overflow-y-auto"
-        style={{ paddingBottom: TOOLBAR_HEIGHT_PX + BOTTOM_PADDING_PX + 48 }}
+        style={{ paddingBottom: TOOLBAR_HEIGHT_PX + BOTTOM_PADDING_PX }}
       >
         <div className="flex flex-col items-center gap-6 pt-2">
           {/* Page 1 */}
@@ -380,60 +378,20 @@ export function LetterCanvas({ onSeal }: LetterCanvasProps) {
             </div>
           ))}
 
-          {/* Add page button — half on letter, half hanging off */}
-          <div ref={pagesEndRef} className="flex justify-center w-full relative z-10" style={{ marginTop: "-24px" }}>
-            <button
-              type="button"
-              onClick={addPage}
-              className="flex items-center justify-center w-12 h-12 rounded-full border-2 border-dashed border-border text-muted-foreground hover:border-primary hover:text-primary hover:bg-primary/5 transition-colors bg-background/95 shadow-sm"
-              aria-label="Add another page"
-              title="Add another page"
-            >
-              <span className="text-2xl leading-none">+</span>
-            </button>
-          </div>
-
-          {/* Seal Letter — primary action, clear of toolbar */}
-          <div className="flex justify-center w-full pt-4">
-            <button
-              onClick={handleSeal}
-              disabled={!hasContent}
-              className={cn(
-                "group relative px-8 py-3 rounded-xl font-serif text-base transition-all duration-300",
-                "bg-primary text-primary-foreground shadow-lg",
-                "hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]",
-                "disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:shadow-lg"
-              )}
-            >
-              <span className="flex items-center gap-2">
-                <svg
-                  viewBox="0 0 24 24"
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M22 2L11 13" />
-                  <path d="M22 2L15 22L11 13L2 9L22 2Z" />
-                </svg>
-                Seal Letter
-              </span>
-            </button>
-          </div>
+          {/* Seal Letter — moved to toolbar row in fixed bar below */}
         </div>
       </div>
 
-      {/* Sticky toolbar — always visible at bottom */}
+      {/* Sticky toolbar row: editing options + Seal Letter (same vertical alignment) */}
       <div
-        className="fixed left-0 right-0 flex justify-center py-3 safe-area-pb"
+        className="fixed left-0 right-0 flex items-center justify-center gap-4 py-3 safe-area-pb"
         style={{
           bottom: 0,
           paddingBottom: Math.max(BOTTOM_PADDING_PX, 12),
           backgroundColor: "rgba(250, 247, 245, 0.92)",
           backdropFilter: "blur(8px)",
           borderTop: "1px solid rgba(229, 221, 216, 0.6)",
+          zIndex: 10,
         }}
       >
         <Toolbar
@@ -445,6 +403,32 @@ export function LetterCanvas({ onSeal }: LetterCanvasProps) {
           onAddWashi={(color) => startPlacement("washi", { color })}
           onAddPhoto={(src) => startPlacement("photo", { src })}
         />
+        <button
+          onClick={handleSeal}
+          disabled={!hasContent}
+          className={cn(
+            "shrink-0 group relative px-6 py-2.5 rounded-xl font-serif text-base transition-all duration-300",
+            "bg-primary text-primary-foreground shadow-lg",
+            "hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]",
+            "disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:shadow-lg"
+          )}
+        >
+          <span className="flex items-center gap-2">
+            <svg
+              viewBox="0 0 24 24"
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M22 2L11 13" />
+              <path d="M22 2L15 22L11 13L2 9L22 2Z" />
+            </svg>
+            Seal Letter
+          </span>
+        </button>
       </div>
     </div>
   )

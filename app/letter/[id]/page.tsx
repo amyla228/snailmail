@@ -129,37 +129,28 @@ export default function LetterPage() {
 }
 
 function ClosedEnvelope() {
+  const envelopeBg = "#fef3ed"
+  const borderColor = "#e5ddd8"
   return (
     <div
-      className="relative w-full rounded-2xl overflow-hidden border border-border"
+      className="relative w-full rounded-2xl overflow-hidden border"
       style={{
-        backgroundColor: "#fef3ed",
+        backgroundColor: envelopeBg,
+        borderColor,
         boxShadow: "0 6px 24px rgba(58, 51, 48, 0.08)",
         aspectRatio: "4 / 3",
       }}
     >
-      {/* Larger triangular flap — scales with envelope, overlaps body for a realistic fold */}
+      {/* Flap — same color as body, shape only */}
       <div className="absolute top-0 left-0 right-0 w-full z-10" style={{ height: "48%" }}>
         <svg viewBox="0 0 400 192" className="w-full h-full" preserveAspectRatio="none">
           <path
             d="M0 0 L200 160 L400 0 L400 192 L0 192 Z"
-            fill="#f9e8dd"
-            stroke="#e5ddd8"
+            fill={envelopeBg}
+            stroke={borderColor}
             strokeWidth="1"
           />
-          <path d="M0 0 L200 160 L400 0" fill="none" stroke="#e5ddd8" strokeWidth="1" />
-        </svg>
-      </div>
-      <div className="absolute inset-0 flex flex-col items-center justify-center pt-20">
-        <div className="w-16 h-16 rounded-full bg-primary/20 border-2 border-primary/40 flex items-center justify-center">
-          <span className="text-2xl">💌</span>
-        </div>
-      </div>
-      <div className="absolute top-5 right-5 w-12 h-14">
-        <svg viewBox="0 0 60 72" className="w-full h-full">
-          <rect width="60" height="72" rx="2" fill="#fef9f6" stroke="#e5ddd8" strokeWidth="1" strokeDasharray="2 2" />
-          <path d="M12 21 C6 15 1 11 1 7 C1 3 4 1 7 1 C9 1 11 3 12 4 C13 3 15 1 17 1 C20 1 23 3 23 7 C23 11 18 15 12 21Z" fill="#e8a0a0" opacity="0.7" />
-          <text x="30" y="58" textAnchor="middle" fontSize="6" fill="#8a817c" fontFamily="serif">5c</text>
+          <path d="M0 0 L200 160 L400 0" fill="none" stroke={borderColor} strokeWidth="1" />
         </svg>
       </div>
     </div>
