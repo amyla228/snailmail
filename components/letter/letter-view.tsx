@@ -18,7 +18,7 @@ interface LetterViewProps {
 }
 
 export function LetterView({ letter, className }: LetterViewProps) {
-  const textClass = letter.fontStyle === "handwriting" ? "font-mono" : "font-serif"
+  const letterBodyClass = letter.fontStyle === "handwriting" ? "font-letter-handwriting" : "font-serif"
 
   return (
     <div
@@ -49,7 +49,7 @@ export function LetterView({ letter, className }: LetterViewProps) {
 
       <div className="relative z-[5] pt-8 px-12 text-right">
         <span
-          className={cn("text-sm opacity-50", textClass)}
+          className={cn("text-sm opacity-50", letterBodyClass)}
           style={{ color: inkColorMap[letter.inkColor] }}
         >
           {letter.date}
@@ -59,8 +59,9 @@ export function LetterView({ letter, className }: LetterViewProps) {
       <div className="relative z-[5] px-12 pt-5">
         <p
           className={cn(
-            "w-full text-lg",
-            textClass === "font-mono" ? "font-mono text-xl" : "font-serif italic"
+            "w-full text-base sm:text-lg",
+            letterBodyClass,
+            letter.fontStyle === "serif" && "italic"
           )}
           style={{ color: inkColorMap[letter.inkColor] }}
         >
@@ -71,10 +72,9 @@ export function LetterView({ letter, className }: LetterViewProps) {
       <div className="relative z-[5] px-12 pt-3 pb-6">
         <p
           className={cn(
-            "w-full leading-8 min-h-[200px] whitespace-pre-wrap",
-            textClass === "font-mono"
-              ? "font-mono text-xl"
-              : "font-serif text-base leading-relaxed"
+            "w-full min-h-[200px] whitespace-pre-wrap text-base",
+            letterBodyClass,
+            letter.fontStyle === "handwriting" ? "leading-[1.7]" : "font-serif leading-relaxed"
           )}
           style={{ color: inkColorMap[letter.inkColor] }}
         >
@@ -82,11 +82,28 @@ export function LetterView({ letter, className }: LetterViewProps) {
         </p>
       </div>
 
+      {(letter.additionalPages?.length ?? 0) > 0 &&
+        letter.additionalPages!.map((page) => (
+          <div key={page.id} className="relative z-[5] px-12 pt-3 pb-6">
+            <p
+              className={cn(
+                "w-full min-h-[120px] whitespace-pre-wrap text-base",
+                letterBodyClass,
+                letter.fontStyle === "handwriting" ? "leading-[1.7]" : "font-serif leading-relaxed"
+              )}
+              style={{ color: inkColorMap[letter.inkColor] }}
+            >
+              {page.text}
+            </p>
+          </div>
+        ))}
+
       <div className="relative z-[5] px-12 pb-10 text-right">
         <p
           className={cn(
-            "text-right w-48 ml-auto block",
-            textClass === "font-mono" ? "font-mono text-xl" : "font-serif text-base italic"
+            "text-right w-48 ml-auto block text-base sm:text-lg",
+            letterBodyClass,
+            letter.fontStyle === "serif" && "italic"
           )}
           style={{ color: inkColorMap[letter.inkColor] }}
         >

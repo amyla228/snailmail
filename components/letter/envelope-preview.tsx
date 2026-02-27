@@ -1,32 +1,24 @@
 "use client"
 
-import { useState } from "react"
 import { cn } from "@/lib/utils"
+import type { SavedLetterState } from "@/lib/letter-store"
+import { downloadLetterAsHtml } from "@/lib/export-letter-html"
 
 interface EnvelopePreviewProps {
-  onSend: () => void
-  onBack: () => void
+  letter: SavedLetterState
+  onDownload: () => void
+  onNewLetter: () => void
 }
 
-export function EnvelopePreview({ onSend, onBack }: EnvelopePreviewProps) {
-  const [isSealing, setIsSealing] = useState(false)
-
-  const handleSend = () => {
-    setIsSealing(true)
-    setTimeout(() => {
-      onSend()
-    }, 1200)
+export function EnvelopePreview({ letter, onDownload, onNewLetter }: EnvelopePreviewProps) {
+  const handleDownload = () => {
+    downloadLetterAsHtml(letter, `letter-${new Date().toISOString().slice(0, 10)}.html`)
+    onDownload()
   }
 
   return (
-    <div className="flex flex-col items-center gap-8 w-full max-w-lg mx-auto px-4 animate-fade-in-up">
-      <div
-        className={cn(
-          "relative w-full max-w-md",
-          isSealing && "animate-envelope-fold"
-        )}
-        style={{ perspective: "800px" }}
-      >
+    <div className="flex flex-col items-center gap-8 w-full max-w-lg mx-auto px-4 animate-fade-in-up min-h-[60vh] justify-center">
+      <div className="relative w-full max-w-md" style={{ perspective: "800px" }}>
         <div
           className="w-full rounded-2xl overflow-hidden relative border border-border"
           style={{
@@ -44,7 +36,7 @@ export function EnvelopePreview({ onSend, onBack }: EnvelopePreviewProps) {
 
           <div className="absolute inset-0 flex flex-col items-center justify-center pt-24">
             <p className="text-sm font-serif text-muted-foreground text-center px-4">
-              Your letter is ready to share. Send to get a link.
+              Your letter is sealed. Download it to open and read.
             </p>
           </div>
 
@@ -64,28 +56,25 @@ export function EnvelopePreview({ onSend, onBack }: EnvelopePreviewProps) {
         </div>
       </div>
 
-      {!isSealing && (
-        <div className="flex gap-4 animate-fade-in-up">
-          <button
-            type="button"
-            onClick={onBack}
-            className="px-6 py-2.5 rounded-xl font-serif text-sm transition-all bg-secondary text-secondary-foreground hover:bg-border"
-          >
-            Back to Letter
-          </button>
-          <button
-            type="button"
-            onClick={handleSend}
-            className={cn(
-              "px-6 py-2.5 rounded-xl font-serif text-sm transition-all",
-              "bg-primary text-primary-foreground shadow-md",
-              "hover:shadow-lg hover:scale-[1.02] active:scale-[0.98]"
-            )}
-          >
-            Send & Get Link
-          </button>
-        </div>
-      )}
+      <div className="flex flex-col items-center gap-3 w-full max-w-sm animate-fade-in-up">
+        <button
+          type="button"
+          onClick={handleDownload}
+          className={cn(
+            "w-full px-6 py-3 rounded-xl font-serif text-base transition-all border-2",
+            "bg-primary text-primary-foreground border-primary hover:bg-primary/90 shadow-md hover:shadow-lg"
+          )}
+        >
+          Download Letter
+        </button>
+        <button
+          type="button"
+          onClick={onNewLetter}
+          className="w-full px-6 py-2.5 rounded-xl font-serif text-sm transition-all bg-secondary text-secondary-foreground hover:bg-border"
+        >
+          Write Another Letter
+        </button>
+      </div>
     </div>
   )
 }

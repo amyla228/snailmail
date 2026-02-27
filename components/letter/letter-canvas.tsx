@@ -1,8 +1,8 @@
 "use client"
 
-import { useState, useRef, useCallback } from "react"
+import { useState, useRef, useCallback, useEffect } from "react"
 import { cn } from "@/lib/utils"
-import type { SavedLetterState, DecoElement } from "@/lib/letter-store"
+import type { SavedLetterState, DecoElement, LetterPage } from "@/lib/letter-store"
 import { DraggableElement } from "./draggable-element"
 import { WashiTape } from "./washi-tape"
 import { Sticker } from "./sticker"
@@ -24,6 +24,9 @@ const PLACEHOLDER_ROTATION: Record<DecoElement["type"], number> = {
   photo: -3,
 }
 
+const TOOLBAR_HEIGHT_PX = 80
+const BOTTOM_PADDING_PX = 24
+
 interface LetterCanvasProps {
   onSeal: (state: SavedLetterState) => void
 }
@@ -32,6 +35,7 @@ export function LetterCanvas({ onSeal }: LetterCanvasProps) {
   const [letterText, setLetterText] = useState("")
   const [greeting, setGreeting] = useState("")
   const [signature, setSignature] = useState("")
+  const [additionalPages, setAdditionalPages] = useState<LetterPage[]>([])
   const [inkColor, setInkColor] = useState<InkColor>("brown")
   const [fontStyle, setFontStyle] = useState<FontStyle>("handwriting")
   const [decorations, setDecorations] = useState<DecoElement[]>([])
@@ -41,6 +45,7 @@ export function LetterCanvas({ onSeal }: LetterCanvasProps) {
   } | null>(null)
   const [placePosition, setPlacePosition] = useState({ x: 100, y: 80 })
   const canvasRef = useRef<HTMLDivElement>(null)
+  const pagesEndRef = useRef<HTMLDivElement>(null)
 
   const today = new Date().toLocaleDateString("en-US", {
     year: "numeric",
@@ -77,6 +82,16 @@ export function LetterCanvas({ onSeal }: LetterCanvasProps) {
     setDecorations((prev) =>
       prev.map((d) => (d.id === id ? { ...d, x, y } : d))
     )
+  }, [])
+
+  const addPage = useCallback(() => {
+    const id = `page-${Date.now()}`
+    setAdditionalPages((prev) => [...prev, { id, text: "" }])
+    setTimeout(() => pagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 100)
+  }, [])
+
+  const updatePageText = useCallback((id: string, text: string) => {
+    setAdditionalPages((prev) => prev.map((p) => (p.id === id ? { ...p, text } : p)))
   }, [])
 
   const handleCanvasMouseMove = useCallback(
@@ -117,236 +132,316 @@ export function LetterCanvas({ onSeal }: LetterCanvasProps) {
         y: d.y,
         rotation: d.rotation,
       })),
+      additionalPages: additionalPages.length > 0 ? additionalPages : undefined,
     })
   }
 
-  const textClass = fontStyle === "handwriting" ? "font-mono" : "font-serif"
+  const letterBodyClass = fontStyle === "handwriting" ? "font-letter-handwriting" : "font-serif"
+  const hasContent = letterText.trim().length > 0
 
   return (
-    <div className="flex flex-col items-center gap-6 w-full max-w-2xl mx-auto px-4">
+    <div className="flex flex-col w-full max-w-2xl mx-auto px-4">
+      {/* Scrollable letter area — padding-bottom so content doesn't sit under sticky toolbar */}
       <div
-        ref={canvasRef}
-        className={cn(
-          "relative w-full rounded-lg overflow-hidden",
-          pendingDecoration && "cursor-crosshair"
-        )}
-        style={{
-          backgroundColor: "var(--paper-soft)",
-          boxShadow:
-            "0 4px 24px rgba(58, 51, 48, 0.08), 0 1px 4px rgba(58, 51, 48, 0.05)",
-          minHeight: "620px",
-        }}
-        onMouseMove={handleCanvasMouseMove}
-        onClick={handleCanvasClick}
+        className="flex-1 overflow-y-auto"
+        style={{ paddingBottom: TOOLBAR_HEIGHT_PX + BOTTOM_PADDING_PX + 24 }}
       >
-        {/* Subtle ruled lines */}
-        <div
-          className="absolute inset-0 pointer-events-none opacity-[0.05]"
-          style={{
-            backgroundImage:
-              "repeating-linear-gradient(transparent, transparent 31px, #d4856a 31px, #d4856a 32px)",
-            backgroundPositionY: "152px",
-          }}
-        />
-
-        <div
-          className="absolute top-0 bottom-0 pointer-events-none opacity-[0.08]"
-          style={{
-            left: "48px",
-            width: "1px",
-            backgroundColor: "#d4856a",
-          }}
-        />
-
-        {/* Date */}
-        <div className="relative z-[5] pt-8 px-12 text-right">
-          <span
-            className={cn("text-sm opacity-50", textClass)}
-            style={{ color: inkColorMap[inkColor] }}
-          >
-            {today}
-          </span>
-        </div>
-
-        {/* Editable Greeting */}
-        <div className="relative z-[5] px-12 pt-5">
-          <input
-            type="text"
-            value={greeting}
-            onChange={(e) => setGreeting(e.target.value)}
-            placeholder="Dear ..."
-            className={cn(
-              "w-full bg-transparent focus:outline-none placeholder:opacity-25 text-lg",
-              textClass === "font-mono" ? "font-mono text-xl" : "font-serif italic"
-            )}
-            style={{
-              color: inkColorMap[inkColor],
-              caretColor: inkColorMap[inkColor],
-            }}
-            aria-label="Greeting"
-          />
-        </div>
-
-        {/* Text Area */}
-        <div className="relative z-[5] px-12 pt-3 pb-6">
-          <textarea
-            value={letterText}
-            onChange={(e) => setLetterText(e.target.value)}
-            placeholder="Write your heart out..."
-            className={cn(
-              "w-full bg-transparent resize-none focus:outline-none leading-8 placeholder:opacity-20 min-h-[340px]",
-              textClass === "font-mono"
-                ? "font-mono text-xl"
-                : "font-serif text-base leading-relaxed"
-            )}
-            style={{
-              color: inkColorMap[inkColor],
-              caretColor: inkColorMap[inkColor],
-            }}
-            aria-label="Letter content"
-          />
-        </div>
-
-        {/* Editable Signature */}
-        <div className="relative z-[5] px-12 pb-10 text-right">
-          <input
-            type="text"
-            value={signature}
-            onChange={(e) => setSignature(e.target.value)}
-            placeholder="Your name"
-            className={cn(
-              "bg-transparent text-right focus:outline-none placeholder:opacity-25 w-48 ml-auto block",
-              textClass === "font-mono" ? "font-mono text-xl" : "font-serif text-base italic"
-            )}
-            style={{
-              color: inkColorMap[inkColor],
-              caretColor: inkColorMap[inkColor],
-            }}
-            aria-label="Signature"
-          />
+        <div className="flex flex-col items-center gap-6 pt-2">
+          {/* Page 1 */}
           <div
-            className="mt-1 ml-auto opacity-20"
+            ref={canvasRef}
+            className={cn(
+              "relative w-full rounded-lg overflow-hidden",
+              pendingDecoration && "cursor-crosshair"
+            )}
             style={{
-              width: "180px",
-              height: "1px",
-              backgroundColor: inkColorMap[inkColor],
+              backgroundColor: "var(--paper-soft)",
+              boxShadow:
+                "0 4px 24px rgba(58, 51, 48, 0.08), 0 1px 4px rgba(58, 51, 48, 0.05)",
+              minHeight: "520px",
             }}
-          />
-        </div>
-
-        {/* Cursor-attached preview (place mode) */}
-        {pendingDecoration && (
-          <div
-            className="absolute z-[60] pointer-events-none"
-            style={{
-              left: placePosition.x,
-              top: placePosition.y,
-              transform: "translate(-50%, -50%)",
-            }}
+            onMouseMove={handleCanvasMouseMove}
+            onClick={handleCanvasClick}
           >
-            {pendingDecoration.type === "washi" && (
-              <WashiTape
-                color={pendingDecoration.data.color as "pink" | "green" | "yellow" | "blue"}
-                rotation={PLACEHOLDER_ROTATION.washi}
-              />
-            )}
-            {pendingDecoration.type === "sticker" && (
-              <Sticker
-                type={
-                  pendingDecoration.data.stickerType as
-                    | "heart"
-                    | "star"
-                    | "flower"
-                    | "butterfly"
-                    | "sun"
-                }
-              />
-            )}
-            {pendingDecoration.type === "photo" && (
-              <Polaroid
-                src={pendingDecoration.data.src || ""}
-                rotation={PLACEHOLDER_ROTATION.photo}
-              />
-            )}
-          </div>
-        )}
+            <div
+              className="absolute inset-0 pointer-events-none opacity-[0.05]"
+              style={{
+                backgroundImage:
+                  "repeating-linear-gradient(transparent, transparent 31px, #d4856a 31px, #d4856a 32px)",
+                backgroundPositionY: "152px",
+              }}
+            />
+            <div
+              className="absolute top-0 bottom-0 pointer-events-none opacity-[0.08]"
+              style={{
+                left: "48px",
+                width: "1px",
+                backgroundColor: "#d4856a",
+              }}
+            />
 
-        {/* Placed decorations — draggable */}
-        {decorations.map((deco) => (
-          <DraggableElement
-            key={deco.id}
-            containerRef={canvasRef}
-            initialX={deco.x}
-            initialY={deco.y}
-            onRemove={() => removeDecoration(deco.id)}
-            onPositionChange={(x, y) => updateDecorationPosition(deco.id, x, y)}
-          >
-            <div data-draggable-decoration>
-              {deco.type === "washi" && (
-                <WashiTape
-                  color={deco.data.color as "pink" | "green" | "yellow" | "blue"}
-                  rotation={deco.rotation ?? PLACEHOLDER_ROTATION.washi}
-                />
-              )}
-              {deco.type === "sticker" && (
-                <Sticker
-                  type={
-                    deco.data.stickerType as
-                      | "heart"
-                      | "star"
-                      | "flower"
-                      | "butterfly"
-                      | "sun"
-                  }
-                />
-              )}
-              {deco.type === "photo" && (
-                <Polaroid
-                  src={deco.data.src || ""}
-                  rotation={deco.rotation ?? PLACEHOLDER_ROTATION.photo}
-                />
-              )}
+            <div className="relative z-[5] pt-8 px-12 text-right">
+              <span
+                className={cn("text-sm opacity-50", letterBodyClass)}
+                style={{ color: inkColorMap[inkColor] }}
+              >
+                {today}
+              </span>
             </div>
-          </DraggableElement>
-        ))}
+
+            <div className="relative z-[5] px-12 pt-5">
+              <input
+                type="text"
+                value={greeting}
+                onChange={(e) => setGreeting(e.target.value)}
+                placeholder="Dear ..."
+                className={cn(
+                  "w-full bg-transparent focus:outline-none placeholder:opacity-25 text-base sm:text-lg",
+                  letterBodyClass,
+                  fontStyle === "serif" && "italic"
+                )}
+                style={{
+                  color: inkColorMap[inkColor],
+                  caretColor: inkColorMap[inkColor],
+                }}
+                aria-label="Greeting"
+              />
+            </div>
+
+            <div className="relative z-[5] px-12 pt-3 pb-6">
+              <textarea
+                value={letterText}
+                onChange={(e) => setLetterText(e.target.value)}
+                placeholder="Write your heart out..."
+                className={cn(
+                  "w-full bg-transparent resize-none focus:outline-none placeholder:opacity-20 min-h-[280px] text-base",
+                  letterBodyClass,
+                  fontStyle === "handwriting" ? "leading-[1.7]" : "font-serif leading-relaxed"
+                )}
+                style={{
+                  color: inkColorMap[inkColor],
+                  caretColor: inkColorMap[inkColor],
+                }}
+                aria-label="Letter content"
+              />
+            </div>
+
+            <div className="relative z-[5] px-12 pb-10 text-right">
+              <input
+                type="text"
+                value={signature}
+                onChange={(e) => setSignature(e.target.value)}
+                placeholder="Your name"
+                className={cn(
+                  "bg-transparent text-right focus:outline-none placeholder:opacity-25 w-48 ml-auto block text-base sm:text-lg",
+                  letterBodyClass,
+                  fontStyle === "serif" && "italic"
+                )}
+                style={{
+                  color: inkColorMap[inkColor],
+                  caretColor: inkColorMap[inkColor],
+                }}
+                aria-label="Signature"
+              />
+              <div
+                className="mt-1 ml-auto opacity-20"
+                style={{
+                  width: "180px",
+                  height: "1px",
+                  backgroundColor: inkColorMap[inkColor],
+                }}
+              />
+            </div>
+
+            {pendingDecoration && (
+              <div
+                className="absolute z-[60] pointer-events-none"
+                style={{
+                  left: placePosition.x,
+                  top: placePosition.y,
+                  transform: "translate(-50%, -50%)",
+                }}
+              >
+                {pendingDecoration.type === "washi" && (
+                  <WashiTape
+                    color={pendingDecoration.data.color as "pink" | "green" | "yellow" | "blue"}
+                    rotation={PLACEHOLDER_ROTATION.washi}
+                  />
+                )}
+                {pendingDecoration.type === "sticker" && (
+                  <Sticker
+                    type={
+                      pendingDecoration.data.stickerType as
+                        | "heart"
+                        | "star"
+                        | "flower"
+                        | "butterfly"
+                        | "sun"
+                    }
+                  />
+                )}
+                {pendingDecoration.type === "photo" && (
+                  <Polaroid
+                    src={pendingDecoration.data.src || ""}
+                    rotation={PLACEHOLDER_ROTATION.photo}
+                  />
+                )}
+              </div>
+            )}
+
+            {decorations.map((deco) => (
+              <DraggableElement
+                key={deco.id}
+                containerRef={canvasRef}
+                initialX={deco.x}
+                initialY={deco.y}
+                onRemove={() => removeDecoration(deco.id)}
+                onPositionChange={(x, y) => updateDecorationPosition(deco.id, x, y)}
+              >
+                <div data-draggable-decoration>
+                  {deco.type === "washi" && (
+                    <WashiTape
+                      color={deco.data.color as "pink" | "green" | "yellow" | "blue"}
+                      rotation={deco.rotation ?? PLACEHOLDER_ROTATION.washi}
+                    />
+                  )}
+                  {deco.type === "sticker" && (
+                    <Sticker
+                      type={
+                        deco.data.stickerType as
+                          | "heart"
+                          | "star"
+                          | "flower"
+                          | "butterfly"
+                          | "sun"
+                      }
+                    />
+                  )}
+                  {deco.type === "photo" && (
+                    <Polaroid
+                      src={deco.data.src || ""}
+                      rotation={deco.rotation ?? PLACEHOLDER_ROTATION.photo}
+                    />
+                  )}
+                </div>
+              </DraggableElement>
+            ))}
+          </div>
+
+          {/* Additional pages */}
+          {additionalPages.map((page) => (
+            <div
+              key={page.id}
+              className="relative w-full rounded-lg overflow-hidden"
+              style={{
+                backgroundColor: "var(--paper-soft)",
+                boxShadow:
+                  "0 4px 24px rgba(58, 51, 48, 0.08), 0 1px 4px rgba(58, 51, 48, 0.05)",
+                minHeight: "400px",
+              }}
+            >
+              <div
+                className="absolute inset-0 pointer-events-none opacity-[0.05]"
+                style={{
+                  backgroundImage:
+                    "repeating-linear-gradient(transparent, transparent 31px, #d4856a 31px, #d4856a 32px)",
+                  backgroundPositionY: "32px",
+                }}
+              />
+              <div
+                className="absolute top-0 bottom-0 pointer-events-none opacity-[0.08]"
+                style={{
+                  left: "48px",
+                  width: "1px",
+                  backgroundColor: "#d4856a",
+                }}
+              />
+              <div className="relative z-[5] px-12 py-8">
+                <textarea
+                  value={page.text}
+                  onChange={(e) => updatePageText(page.id, e.target.value)}
+                  placeholder="Continue your letter..."
+                  className={cn(
+                    "w-full bg-transparent resize-none focus:outline-none placeholder:opacity-20 min-h-[320px] text-base",
+                    letterBodyClass,
+                    fontStyle === "handwriting" ? "leading-[1.7]" : "font-serif leading-relaxed"
+                  )}
+                  style={{
+                    color: inkColorMap[inkColor],
+                    caretColor: inkColorMap[inkColor],
+                  }}
+                  aria-label="Letter page"
+                />
+              </div>
+            </div>
+          ))}
+
+          {/* Add page button */}
+          <div ref={pagesEndRef} className="flex justify-center w-full py-2">
+            <button
+              type="button"
+              onClick={addPage}
+              className="flex items-center justify-center w-12 h-12 rounded-full border-2 border-dashed border-border text-muted-foreground hover:border-primary hover:text-primary hover:bg-primary/5 transition-colors"
+              aria-label="Add another page"
+              title="Add another page"
+            >
+              <span className="text-2xl leading-none">+</span>
+            </button>
+          </div>
+
+          {/* Seal Letter — only primary action */}
+          <div className="flex justify-center w-full pt-2">
+            <button
+              onClick={handleSeal}
+              disabled={!hasContent}
+              className={cn(
+                "group relative px-8 py-3 rounded-xl font-serif text-base transition-all duration-300",
+                "bg-primary text-primary-foreground shadow-lg",
+                "hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]",
+                "disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:shadow-lg"
+              )}
+            >
+              <span className="flex items-center gap-2">
+                <svg
+                  viewBox="0 0 24 24"
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M22 2L11 13" />
+                  <path d="M22 2L15 22L11 13L2 9L22 2Z" />
+                </svg>
+                Seal Letter
+              </span>
+            </button>
+          </div>
+        </div>
       </div>
 
-      <Toolbar
-        inkColor={inkColor}
-        onInkColorChange={setInkColor}
-        fontStyle={fontStyle}
-        onFontStyleChange={setFontStyle}
-        onAddSticker={(type) => startPlacement("sticker", { stickerType: type })}
-        onAddWashi={(color) => startPlacement("washi", { color })}
-        onAddPhoto={(src) => startPlacement("photo", { src })}
-      />
-
-      <button
-        onClick={handleSeal}
-        disabled={!letterText.trim()}
-        className={cn(
-          "group relative px-8 py-3 rounded-xl font-serif text-base transition-all duration-300",
-          "bg-primary text-primary-foreground shadow-lg",
-          "hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]",
-          "disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:shadow-lg"
-        )}
+      {/* Sticky toolbar — always visible at bottom */}
+      <div
+        className="fixed left-0 right-0 flex justify-center py-3 safe-area-pb"
+        style={{
+          bottom: 0,
+          paddingBottom: Math.max(BOTTOM_PADDING_PX, 12),
+          backgroundColor: "rgba(250, 247, 245, 0.92)",
+          backdropFilter: "blur(8px)",
+          borderTop: "1px solid rgba(229, 221, 216, 0.6)",
+        }}
       >
-        <span className="flex items-center gap-2">
-          <svg
-            viewBox="0 0 24 24"
-            className="w-5 h-5"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M22 2L11 13" />
-            <path d="M22 2L15 22L11 13L2 9L22 2Z" />
-          </svg>
-          Seal & Send
-        </span>
-      </button>
+        <Toolbar
+          inkColor={inkColor}
+          onInkColorChange={setInkColor}
+          fontStyle={fontStyle}
+          onFontStyleChange={setFontStyle}
+          onAddSticker={(type) => startPlacement("sticker", { stickerType: type })}
+          onAddWashi={(color) => startPlacement("washi", { color })}
+          onAddPhoto={(src) => startPlacement("photo", { src })}
+        />
+      </div>
     </div>
   )
 }

@@ -1,53 +1,76 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import { cn } from "@/lib/utils"
+import { getLetter } from "@/lib/letter-store"
+import type { SavedLetterState } from "@/lib/letter-store"
+import { LetterView } from "./letter-view"
+import html2canvas from "html2canvas"
 
 interface SentConfirmationProps {
   shareableId: string | null
+  recipient?: string | null
   onNewLetter: () => void
 }
 
-export function SentConfirmation({ shareableId, onNewLetter }: SentConfirmationProps) {
+export function SentConfirmation({ shareableId, recipient, onNewLetter }: SentConfirmationProps) {
   const [showMessage, setShowMessage] = useState(false)
   const [showActions, setShowActions] = useState(false)
-  const [copied, setCopied] = useState(false)
+  const [letter, setLetter] = useState<SavedLetterState | null>(null)
+  const [downloading, setDownloading] = useState(false)
+  const letterRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const msgTimer = setTimeout(() => setShowMessage(true), 400)
-    const actionsTimer = setTimeout(() => setShowActions(true), 1000)
+    const actionsTimer = setTimeout(() => setShowActions(true), 800)
     return () => {
       clearTimeout(msgTimer)
       clearTimeout(actionsTimer)
     }
   }, [])
 
-  const shareUrl = typeof window !== "undefined" && shareableId
-    ? `${window.location.origin}/letter/${shareableId}`
-    : ""
+  useEffect(() => {
+    if (shareableId) {
+      const data = getLetter(shareableId)
+      setLetter(data ?? null)
+    } else {
+      setLetter(null)
+    }
+  }, [shareableId])
 
-  const handleCopy = async () => {
-    if (!shareUrl) return
+  const handleDownload = async () => {
+    if (!letterRef.current || !letter) return
+    setDownloading(true)
     try {
-      await navigator.clipboard.writeText(shareUrl)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
-    } catch {
-      // fallback: select and copy
-      const input = document.createElement("input")
-      input.value = shareUrl
-      document.body.appendChild(input)
-      input.select()
-      document.execCommand("copy")
-      document.body.removeChild(input)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
+      const canvas = await html2canvas(letterRef.current, {
+        backgroundColor: null,
+        scale: 2,
+        useCORS: true,
+        logging: false,
+      })
+      const link = document.createElement("a")
+      link.download = `letter-${shareableId ?? "download"}.png`
+      link.href = canvas.toDataURL("image/png")
+      link.click()
+    } finally {
+      setDownloading(false)
     }
   }
 
   return (
     <div className="flex flex-col items-center justify-center gap-8 min-h-[60vh] px-4">
-      {/* Optional envelope sealing animation */}
+      {/* Off-screen letter for export (must be in DOM for html2canvas) */}
+      {letter && (
+        <div
+          ref={letterRef}
+          className="absolute top-0 w-[512px]"
+          style={{ left: "-9999px" }}
+          aria-hidden
+        >
+          <LetterView letter={letter} />
+        </div>
+      )}
+
       <div className="animate-gentle-bounce">
         <svg
           viewBox="0 0 120 100"
@@ -66,29 +89,29 @@ export function SentConfirmation({ shareableId, onNewLetter }: SentConfirmationP
             Your letter has been sent 💌
           </h2>
           <p className="font-serif text-muted-foreground text-sm max-w-xs mx-auto leading-relaxed">
-            Share the link below so someone can open your snail mail.
+            Download your letter or write another.
           </p>
         </div>
       )}
 
       {showActions && shareableId && (
-        <div className="flex flex-col items-center gap-4 w-full max-w-sm animate-fade-in-up">
+        <div className="flex flex-col items-center gap-3 w-full max-w-sm animate-fade-in-up">
           <button
             type="button"
-            onClick={handleCopy}
+            onClick={handleDownload}
+            disabled={!letter || downloading}
             className={cn(
               "w-full px-6 py-3 rounded-xl font-serif text-sm transition-all border-2",
-              copied
-                ? "bg-primary/20 border-primary text-primary"
-                : "bg-primary text-primary-foreground border-primary hover:bg-primary/90"
+              "bg-primary text-primary-foreground border-primary hover:bg-primary/90",
+              "disabled:opacity-50 disabled:cursor-not-allowed"
             )}
           >
-            {copied ? "Copied!" : "Copy Link"}
+            {downloading ? "Preparing…" : "Download Letter"}
           </button>
           <button
             type="button"
             onClick={onNewLetter}
-            className="px-6 py-2.5 rounded-xl font-serif text-sm transition-all bg-secondary text-secondary-foreground hover:bg-border"
+            className="mt-2 px-6 py-2.5 rounded-xl font-serif text-sm transition-all bg-secondary text-secondary-foreground hover:bg-border"
           >
             Write Another Letter
           </button>

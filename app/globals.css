@@ -89,6 +89,13 @@
   }
 }
 
+/* Letter body text: Gloria Hallelujah for handwritten feel (only applied to letter content) */
+.font-letter-handwriting {
+  font-family: var(--font-gloria), cursive, sans-serif;
+  line-height: 1.7;
+  letter-spacing: 0.02em;
+}
+
 @keyframes envelope-fold {
   0% { transform: rotateX(0deg); opacity: 1; }
   50% { transform: rotateX(-90deg); opacity: 0.8; }

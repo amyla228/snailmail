@@ -15,6 +15,12 @@ export interface DecoElement {
   rotation?: number
 }
 
+/** Extra letter pages (page 1 uses main text/greeting/signature) */
+export interface LetterPage {
+  id: string
+  text: string
+}
+
 export interface SavedLetterState {
   text: string
   date: string
@@ -23,6 +29,8 @@ export interface SavedLetterState {
   inkColor: InkColor
   fontStyle: FontStyle
   decorations: DecoElement[]
+  /** Additional pages (same paper style); page 1 is the main letter fields */
+  additionalPages?: LetterPage[]
 }
 
 const store = new Map<string, SavedLetterState>()

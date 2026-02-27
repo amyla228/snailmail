@@ -47,14 +47,16 @@ export function DraggableElement({
     >
       {onRemove && (
         <button
+          type="button"
+          onPointerDown={(e) => e.stopPropagation()}
           onClick={(e) => {
             e.stopPropagation()
             onRemove()
           }}
-          className="absolute -top-2.5 -right-2.5 w-6 h-6 rounded-full bg-destructive text-destructive-foreground text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-20 hover:scale-110"
+          className="absolute -top-2.5 -right-2.5 w-6 h-6 rounded-full bg-destructive text-destructive-foreground text-xs font-sans flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-20 hover:scale-110 pointer-events-auto"
           aria-label="Remove decoration"
         >
-          {'x'}
+          ×
         </button>
       )}
       {children}
