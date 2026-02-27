@@ -138,10 +138,16 @@ function ClosedEnvelope() {
         aspectRatio: "4 / 3",
       }}
     >
-      <div className="absolute top-0 left-0 right-0 w-full">
-        <svg viewBox="0 0 400 100" className="w-full" preserveAspectRatio="none">
-          <path d="M0 0 L200 80 L400 0 L400 0 L0 0Z" fill="#f9e8dd" />
-          <path d="M0 0 L200 80 L400 0" fill="none" stroke="#e5ddd8" strokeWidth="1" />
+      {/* Larger triangular flap — scales with envelope, overlaps body for a realistic fold */}
+      <div className="absolute top-0 left-0 right-0 w-full z-10" style={{ height: "48%" }}>
+        <svg viewBox="0 0 400 192" className="w-full h-full" preserveAspectRatio="none">
+          <path
+            d="M0 0 L200 160 L400 0 L400 192 L0 192 Z"
+            fill="#f9e8dd"
+            stroke="#e5ddd8"
+            strokeWidth="1"
+          />
+          <path d="M0 0 L200 160 L400 0" fill="none" stroke="#e5ddd8" strokeWidth="1" />
         </svg>
       </div>
       <div className="absolute inset-0 flex flex-col items-center justify-center pt-20">

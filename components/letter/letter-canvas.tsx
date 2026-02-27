@@ -117,7 +117,9 @@ export function LetterCanvas({ onSeal }: LetterCanvasProps) {
 
   const handleSeal = () => {
     if (!letterText.trim()) return
-    const toLine = recipientName.trim() ? `Dear ${recipientName.trim()},` : "Dear …,"
+    const name = recipientName.trim()
+    const comma = name && !name.endsWith(",") ? "," : ""
+    const toLine = name ? `Dear ${name}${comma}` : "Dear …,"
     onSeal({
       text: letterText,
       date: today,
@@ -385,8 +387,8 @@ export function LetterCanvas({ onSeal }: LetterCanvasProps) {
             </div>
           ))}
 
-          {/* Add page button — half on the letter so it stays visible above toolbar */}
-          <div ref={pagesEndRef} className="flex justify-center w-full -mt-6 relative z-10">
+          {/* Add page button — half on letter, half off the bottom edge */}
+          <div ref={pagesEndRef} className="flex justify-center w-full relative z-10" style={{ marginTop: "-28px" }}>
             <button
               type="button"
               onClick={addPage}

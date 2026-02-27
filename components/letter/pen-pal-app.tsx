@@ -36,12 +36,6 @@ export function PenPalApp() {
           />
         )}
       </main>
-
-      <footer className="pb-6 text-center">
-        <p className="font-serif text-xs text-muted-foreground/40">
-          Some words are best written slowly.
-        </p>
-      </footer>
     </div>
   )
 }

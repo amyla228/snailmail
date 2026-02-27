@@ -13,6 +13,7 @@ interface EnvelopePreviewProps {
 
 export function EnvelopePreview({ letter, onNewLetter }: EnvelopePreviewProps) {
   const [sending, setSending] = useState(false)
+  const [toEmail, setToEmail] = useState("")
 
   const handleSendLetter = async () => {
     let id = letter.id
@@ -48,7 +49,16 @@ export function EnvelopePreview({ letter, onNewLetter }: EnvelopePreviewProps) {
     const shareUrl = `${window.location.origin}/letter/${id}`
     const subject = "New Letter from your Pen Pal 💌"
     const body = `Copy and paste this link into your browser to read my letter:\n${shareUrl}`
-    const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
+    const params = new URLSearchParams({
+      view: "cm",
+      fs: "1",
+      su: subject,
+      body,
+    })
+    if (toEmail.trim()) {
+      params.set("to", toEmail.trim())
+    }
+    const gmailUrl = `https://mail.google.com/mail/?${params.toString()}`
     window.open(gmailUrl, "_blank", "noopener,noreferrer")
   }
 
@@ -57,7 +67,7 @@ export function EnvelopePreview({ letter, onNewLetter }: EnvelopePreviewProps) {
 
   return (
     <div className="flex flex-col items-center gap-8 w-full max-w-lg mx-auto px-4 animate-fade-in-up min-h-[60vh] justify-center">
-      {/* Back of envelope: flat rectangle, no front flap; To/From text; stamps on back */}
+      {/* Back of envelope with larger proportional flap overlapping the body */}
       <div className="relative w-full max-w-md" style={{ perspective: "800px" }}>
         <div
           className="w-full rounded-2xl overflow-hidden relative border border-border flex flex-col items-center justify-center py-10 px-8"
@@ -76,11 +86,21 @@ export function EnvelopePreview({ letter, onNewLetter }: EnvelopePreviewProps) {
             </svg>
           </div>
 
-          {/* To: and From: on back — centered, larger font */}
+          {/* To: and From: on back — centered; To: includes email input */}
           <div className="flex flex-col gap-5 text-center font-serif text-lg text-foreground">
-            <div>
-              <span className="text-muted-foreground mr-2">To:</span>
+            <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1">
+              <span className="text-muted-foreground">To:</span>
               <span>{toName}</span>
+              <span className="text-muted-foreground">(</span>
+              <input
+                type="email"
+                value={toEmail}
+                onChange={(e) => setToEmail(e.target.value)}
+                placeholder="enter email"
+                className="flex-1 min-w-[140px] max-w-[200px] rounded border border-border bg-background/80 px-2 py-1 text-base font-serif text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                aria-label="Recipient email"
+              />
+              <span className="text-muted-foreground">)</span>
             </div>
             <div>
               <span className="text-muted-foreground mr-2">From:</span>
@@ -96,11 +116,23 @@ export function EnvelopePreview({ letter, onNewLetter }: EnvelopePreviewProps) {
           onClick={handleSendLetter}
           disabled={sending}
           className={cn(
-            "w-full px-6 py-3 rounded-xl font-serif text-base transition-all border-2",
+            "w-full px-6 py-3 rounded-xl font-serif text-base transition-all border-2 flex items-center justify-center gap-2",
             "bg-primary text-primary-foreground border-primary hover:bg-primary/90 shadow-md hover:shadow-lg",
             "disabled:opacity-60 disabled:cursor-wait"
           )}
         >
+          <svg
+            viewBox="0 0 24 24"
+            className="w-5 h-5 flex-shrink-0"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M22 2L11 13" />
+            <path d="M22 2L15 22L11 13L2 9L22 2Z" />
+          </svg>
           {sending ? "Saving…" : "Send Letter"}
         </button>
         <p className="text-xs text-muted-foreground text-center font-serif">
