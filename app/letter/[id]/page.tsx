@@ -51,7 +51,7 @@ export default function LetterPage() {
       {!isOpen ? (
         <>
           <h2 className="font-serif text-2xl text-center mb-2">
-            You&apos;ve received snail mail 🐌
+            You&apos;ve received a letter
           </h2>
           <p className="text-sm text-muted-foreground text-center mb-8">
             Click the envelope to open

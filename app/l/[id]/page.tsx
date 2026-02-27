@@ -21,7 +21,7 @@ export default async function LetterPage({
 
   return (
     <div style={{ padding: 40 }}>
-      <h1>Snail Mail 🐌</h1>
+      <h1>My Pen Pal</h1>
       <pre>{JSON.stringify(letter, null, 2)}</pre>
     </div>
   )

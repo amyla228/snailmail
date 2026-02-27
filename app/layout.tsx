@@ -10,8 +10,8 @@ const gloriaHallelujah = Gloria_Hallelujah({
 })
 
 export const metadata: Metadata = {
-  title: 'Snail Mail - Shareable Letters',
-  description: 'Write and share letters with a unique link. A cozy, playful digital snail mail experience.',
+  title: 'My Pen Pal - Shareable Letters',
+  description: 'Write and share letters with a unique link. A cozy, playful digital pen pal experience.',
   generator: 'v0.app',
   icons: {
     icon: [
@@ -55,12 +55,12 @@ export default function RootLayout({
       >
         {/* Server-rendered header */}
         <header style={{ padding: '1.25rem 1rem 0', textAlign: 'center' }}>
-          <h1 style={{ margin: 0, fontSize: '1.75rem', letterSpacing: '0.02em' }}>Snail Mail</h1>
+          <h1 style={{ margin: 0, fontSize: '1.75rem', letterSpacing: '0.02em' }}>My Pen Pal</h1>
         </header>
         {children}
         <noscript>
           <p style={{ padding: '1rem', textAlign: 'center', color: '#8a817c' }}>
-            Snail Mail needs JavaScript to run. Please enable it and refresh.
+            My Pen Pal needs JavaScript to run. Please enable it and refresh.
           </p>
         </noscript>
       </body>

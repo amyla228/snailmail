@@ -24,8 +24,8 @@ const PLACEHOLDER_ROTATION: Record<DecoElement["type"], number> = {
   photo: -3,
 }
 
-const TOOLBAR_HEIGHT_PX = 80
-const BOTTOM_PADDING_PX = 24
+const TOOLBAR_HEIGHT_PX = 96
+const BOTTOM_PADDING_PX = 28
 
 interface LetterCanvasProps {
   onSeal: (state: SavedLetterState) => void
@@ -117,7 +117,7 @@ export function LetterCanvas({ onSeal }: LetterCanvasProps) {
 
   const handleSeal = () => {
     if (!letterText.trim()) return
-    const toLine = recipientName.trim() ? `Dear ${recipientName.trim()}` : "Dear …"
+    const toLine = recipientName.trim() ? `Dear ${recipientName.trim()},` : "Dear …,"
     onSeal({
       text: letterText,
       date: today,
@@ -143,10 +143,10 @@ export function LetterCanvas({ onSeal }: LetterCanvasProps) {
 
   return (
     <div className="flex flex-col w-full max-w-2xl mx-auto px-4">
-      {/* Scrollable letter area — padding-bottom so content doesn't sit under sticky toolbar */}
+      {/* Scrollable letter area — extra padding so Seal and + stay above toolbar */}
       <div
         className="flex-1 overflow-y-auto"
-        style={{ paddingBottom: TOOLBAR_HEIGHT_PX + BOTTOM_PADDING_PX + 24 }}
+        style={{ paddingBottom: TOOLBAR_HEIGHT_PX + BOTTOM_PADDING_PX + 48 }}
       >
         <div className="flex flex-col items-center gap-6 pt-2">
           {/* Page 1 */}
@@ -216,6 +216,12 @@ export function LetterCanvas({ onSeal }: LetterCanvasProps) {
                   }}
                   aria-label="Recipient name"
                 />
+                <span
+                  className={cn(letterBodyClass, fontStyle === "serif" && "italic")}
+                  style={{ color: inkColorMap[inkColor] }}
+                >
+                  ,
+                </span>
               </div>
             </div>
 
@@ -379,12 +385,12 @@ export function LetterCanvas({ onSeal }: LetterCanvasProps) {
             </div>
           ))}
 
-          {/* Add page button */}
-          <div ref={pagesEndRef} className="flex justify-center w-full py-2">
+          {/* Add page button — half on the letter so it stays visible above toolbar */}
+          <div ref={pagesEndRef} className="flex justify-center w-full -mt-6 relative z-10">
             <button
               type="button"
               onClick={addPage}
-              className="flex items-center justify-center w-12 h-12 rounded-full border-2 border-dashed border-border text-muted-foreground hover:border-primary hover:text-primary hover:bg-primary/5 transition-colors"
+              className="flex items-center justify-center w-12 h-12 rounded-full border-2 border-dashed border-border text-muted-foreground hover:border-primary hover:text-primary hover:bg-primary/5 transition-colors bg-background/95 shadow-sm"
               aria-label="Add another page"
               title="Add another page"
             >
@@ -392,8 +398,8 @@ export function LetterCanvas({ onSeal }: LetterCanvasProps) {
             </button>
           </div>
 
-          {/* Seal Letter — only primary action */}
-          <div className="flex justify-center w-full pt-2">
+          {/* Seal Letter — primary action, clear of toolbar */}
+          <div className="flex justify-center w-full pt-4">
             <button
               onClick={handleSeal}
               disabled={!hasContent}

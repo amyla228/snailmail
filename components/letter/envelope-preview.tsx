@@ -15,6 +15,7 @@ export function EnvelopePreview({ letter, onNewLetter }: EnvelopePreviewProps) {
   const [sending, setSending] = useState(false)
 
   const handleSendLetter = async () => {
+    const newWindow = window.open("", "_blank", "noopener,noreferrer")
     let id = letter.id
     if (!id) {
       setSending(true)
@@ -48,7 +49,11 @@ export function EnvelopePreview({ letter, onNewLetter }: EnvelopePreviewProps) {
     const subject = "Remember to paste the link to your letter [DELETE THIS]!"
     const body = `Open your letter here: ${shareUrl}`
     const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
-    window.open(gmailUrl, "_blank")
+    if (newWindow) {
+      newWindow.location.href = gmailUrl
+    } else {
+      window.location.href = gmailUrl
+    }
   }
 
   const toName = letter.recipientName?.trim() || "—"
