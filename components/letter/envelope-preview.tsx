@@ -19,9 +19,13 @@ export function EnvelopePreview({ letter, onNewLetter }: EnvelopePreviewProps) {
     if (!id) {
       setSending(true)
       try {
+        const payload = {
+          recipient: letter.recipientName?.trim() || "A friend",
+          state: JSON.stringify(letter),
+        }
         const { data, error } = await supabase
           .from("letters")
-          .insert({ state: JSON.stringify(letter) })
+          .insert(payload)
           .select("id")
           .single()
         if (error) {
@@ -41,7 +45,9 @@ export function EnvelopePreview({ letter, onNewLetter }: EnvelopePreviewProps) {
     }
     if (!id) return
     const shareUrl = `${window.location.origin}/l/${id}`
-    const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&su=You've%20Got%20Snail%20Mail!&body=Open%20your%20letter%20here:%20${encodeURIComponent(shareUrl)}`
+    const subject = "Remember to paste the link to your letter [DELETE THIS]!"
+    const body = `Open your letter here: ${shareUrl}`
+    const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
     window.open(gmailUrl, "_blank")
   }
 
@@ -69,8 +75,8 @@ export function EnvelopePreview({ letter, onNewLetter }: EnvelopePreviewProps) {
             </svg>
           </div>
 
-          {/* To: and From: on back */}
-          <div className="flex flex-col gap-4 w-full max-w-[240px] font-serif text-sm text-foreground">
+          {/* To: and From: on back — centered, larger font */}
+          <div className="flex flex-col gap-5 text-center font-serif text-lg text-foreground">
             <div>
               <span className="text-muted-foreground mr-2">To:</span>
               <span>{toName}</span>

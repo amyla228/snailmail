@@ -34,7 +34,6 @@ interface LetterCanvasProps {
 export function LetterCanvas({ onSeal }: LetterCanvasProps) {
   const [letterText, setLetterText] = useState("")
   const [recipientName, setRecipientName] = useState("")
-  const [greeting, setGreeting] = useState("")
   const [signature, setSignature] = useState("")
   const [additionalPages, setAdditionalPages] = useState<LetterPage[]>([])
   const [inkColor, setInkColor] = useState<InkColor>("brown")
@@ -118,10 +117,11 @@ export function LetterCanvas({ onSeal }: LetterCanvasProps) {
 
   const handleSeal = () => {
     if (!letterText.trim()) return
+    const toLine = recipientName.trim() ? `Dear ${recipientName.trim()}` : "Dear …"
     onSeal({
       text: letterText,
       date: today,
-      greeting,
+      greeting: toLine,
       signature,
       recipientName: recipientName.trim() || undefined,
       inkColor,
@@ -191,46 +191,32 @@ export function LetterCanvas({ onSeal }: LetterCanvasProps) {
               </span>
             </div>
 
-            <div className="relative z-[5] px-12 pt-3">
-              <label htmlFor="to-field" className="block text-sm font-serif text-muted-foreground mb-1">
-                To:
-              </label>
-              <input
-                id="to-field"
-                type="text"
-                value={recipientName}
-                onChange={(e) => setRecipientName(e.target.value)}
-                placeholder="Name of recipient"
-                className={cn(
-                  "w-full bg-transparent focus:outline-none placeholder:opacity-25 text-base sm:text-lg",
-                  letterBodyClass,
-                  fontStyle === "serif" && "italic"
-                )}
-                style={{
-                  color: inkColorMap[inkColor],
-                  caretColor: inkColorMap[inkColor],
-                }}
-                aria-label="To (recipient)"
-              />
-            </div>
-
             <div className="relative z-[5] px-12 pt-5">
-              <input
-                type="text"
-                value={greeting}
-                onChange={(e) => setGreeting(e.target.value)}
-                placeholder="Dear ..."
-                className={cn(
-                  "w-full bg-transparent focus:outline-none placeholder:opacity-25 text-base sm:text-lg",
-                  letterBodyClass,
-                  fontStyle === "serif" && "italic"
-                )}
-                style={{
-                  color: inkColorMap[inkColor],
-                  caretColor: inkColorMap[inkColor],
-                }}
-                aria-label="Greeting"
-              />
+              <div className="flex flex-wrap items-baseline gap-1">
+                <span
+                  className={cn(letterBodyClass, fontStyle === "serif" && "italic")}
+                  style={{ color: inkColorMap[inkColor] }}
+                >
+                  Dear
+                </span>
+                <input
+                  id="recipient-field"
+                  type="text"
+                  value={recipientName}
+                  onChange={(e) => setRecipientName(e.target.value)}
+                  placeholder="Recipient"
+                  className={cn(
+                    "flex-1 min-w-[120px] bg-transparent focus:outline-none placeholder:opacity-25 text-base sm:text-lg",
+                    letterBodyClass,
+                    fontStyle === "serif" && "italic"
+                  )}
+                  style={{
+                    color: inkColorMap[inkColor],
+                    caretColor: inkColorMap[inkColor],
+                  }}
+                  aria-label="Recipient name"
+                />
+              </div>
             </div>
 
             <div className="relative z-[5] px-12 pt-3 pb-6">
