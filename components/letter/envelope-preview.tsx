@@ -136,7 +136,7 @@ export function EnvelopePreview({ letter, onNewLetter }: EnvelopePreviewProps) {
   const fromName = letter.signature?.trim() || "—"
 
   return (
-    <div className="flex flex-col w-full max-w-lg mx-auto px-4 animate-fade-in-up min-h-[60vh] pb-24">
+    <div className="flex flex-col w-full max-w-lg mx-auto px-4 animate-fade-in-up min-h-[60vh] pb-40">
       <div className="relative w-full max-w-md mx-auto flex-1 flex flex-col justify-center">
         <div
           ref={envelopeRef}
@@ -149,12 +149,35 @@ export function EnvelopePreview({ letter, onNewLetter }: EnvelopePreviewProps) {
             borderColor: "rgba(229, 221, 216, 0.8)",
             boxShadow: "0 6px 24px rgba(58, 51, 48, 0.08)",
             aspectRatio: "4 / 3",
+            ...(isDoodleMode && { cursor: "url('/pencil-cursor.png') 4 28, crosshair" }),
           }}
           onClick={handleEnvelopeClick}
         >
+          {/* Front of envelope: folded triangular flap overlapping body */}
+          <div className="absolute top-0 left-0 right-0 w-full z-10" style={{ height: "42%" }}>
+            <svg viewBox="0 0 400 168" className="w-full h-full block" preserveAspectRatio="none">
+              <defs>
+                <linearGradient id="envelope-flap-shade-edit" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="rgba(0,0,0,0.06)" />
+                  <stop offset="100%" stopColor="transparent" />
+                </linearGradient>
+              </defs>
+              <path
+                d="M0 0 L200 140 L400 0 L400 168 L0 168 Z"
+                fill={envelopeColor}
+                stroke="rgba(229, 221, 216, 0.9)"
+                strokeWidth="1"
+              />
+              <path d="M0 0 L200 140 L400 0" fill="url(#envelope-flap-shade-edit)" stroke="rgba(200,190,180,0.4)" strokeWidth="1" />
+            </svg>
+          </div>
+
           <div
             className="absolute inset-0 z-[5]"
-            style={{ pointerEvents: isDoodleMode ? "auto" : "none" }}
+            style={{
+              pointerEvents: isDoodleMode ? "auto" : "none",
+              cursor: isDoodleMode ? "url('/pencil-cursor.png') 4 28, crosshair" : "default",
+            }}
             onPointerDown={handleDoodleDown}
             onPointerMove={handleDoodleMove}
             onPointerUp={handleDoodleUp}
@@ -214,10 +237,10 @@ export function EnvelopePreview({ letter, onNewLetter }: EnvelopePreviewProps) {
         </div>
       </div>
 
-      {/* Envelope editing toolbar + Send Letter */}
+      {/* Envelope editing toolbar + Send Letter — no divider line; lower on page */}
       <div
-        className="fixed left-0 right-0 flex items-center justify-center gap-4 py-3 safe-area-pb"
-        style={{ bottom: 0, paddingBottom: Math.max(28, 12), backgroundColor: "rgba(250, 247, 245, 0.92)", backdropFilter: "blur(8px)", borderTop: "1px solid rgba(229, 221, 216, 0.6)", zIndex: 10 }}
+        className="fixed left-0 right-0 flex items-center justify-center gap-4 py-4 safe-area-pb"
+        style={{ bottom: 0, paddingBottom: Math.max(40, 16), backgroundColor: "rgba(250, 247, 245, 0.92)", backdropFilter: "blur(8px)", zIndex: 10 }}
       >
         <div className="flex flex-col items-center gap-3 relative">
           <div className="flex items-center gap-1.5 bg-card/90 backdrop-blur-sm rounded-2xl px-4 py-2.5 shadow-lg border border-border">
@@ -271,7 +294,7 @@ export function EnvelopePreview({ letter, onNewLetter }: EnvelopePreviewProps) {
         </button>
       </div>
 
-      <div className="flex flex-col items-center gap-2 mt-4">
+      <div className="flex flex-col items-center gap-2 mt-8">
         <p className="text-xs text-muted-foreground text-center font-serif">This will open your email with the letter link included.</p>
         <button type="button" onClick={onNewLetter} className="px-6 py-2.5 rounded-xl font-serif text-sm transition-all bg-secondary text-secondary-foreground hover:bg-border">Write Another Letter</button>
       </div>

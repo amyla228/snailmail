@@ -224,15 +224,19 @@ export function LetterCanvas({ onSeal }: LetterCanvasProps) {
               boxShadow:
                 "0 4px 24px rgba(58, 51, 48, 0.08), 0 1px 4px rgba(58, 51, 48, 0.05)",
               minHeight: "520px",
+              ...(isDoodleMode && { cursor: "url('/pencil-cursor.png') 4 28, crosshair" }),
             }}
             onMouseMove={handleCanvasMouseMove}
             onClick={handleCanvasClick}
           >
-            {/* Doodle layer — within letter bounds, only active in doodle mode */}
+            {/* Doodle layer — within letter bounds, only active in doodle mode; pencil cursor when draw active */}
             <div
               ref={doodleContainerRef}
               className="absolute inset-0 z-[8]"
-              style={{ pointerEvents: isDoodleMode ? "auto" : "none" }}
+              style={{
+                pointerEvents: isDoodleMode ? "auto" : "none",
+                cursor: isDoodleMode ? "url('/pencil-cursor.png') 4 28, crosshair" : "default",
+              }}
               onPointerDown={handleDoodlePointerDown}
               onPointerMove={handleDoodlePointerMove}
               onPointerUp={handleDoodlePointerUp}
@@ -496,7 +500,6 @@ export function LetterCanvas({ onSeal }: LetterCanvasProps) {
           paddingBottom: Math.max(BOTTOM_PADDING_PX, 12),
           backgroundColor: "rgba(250, 247, 245, 0.92)",
           backdropFilter: "blur(8px)",
-          borderTop: "1px solid rgba(229, 221, 216, 0.6)",
           zIndex: 10,
         }}
       >
