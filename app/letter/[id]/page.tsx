@@ -136,6 +136,8 @@ function ClosedEnvelope({ letter }: { letter: SavedLetterState }) {
   const borderColor = "#e5ddd8"
   const decorations = letter.envelopeDecorations ?? []
   const doodles = letter.envelopeDoodles ?? []
+  const toName = letter.recipientName?.trim() || "—"
+  const fromName = letter.signature?.trim() || "—"
   type StickerType = "heart" | "star" | "flower" | "butterfly" | "sun"
   return (
     <div
@@ -153,6 +155,17 @@ function ClosedEnvelope({ letter }: { letter: SavedLetterState }) {
           <path d="M0 0 L200 160 L400 0 Z" fill={envelopeBg} stroke="none" />
           <path d="M0 0 L200 160 L400 0" fill="none" stroke={borderColor} strokeWidth="1" />
         </svg>
+      </div>
+      {/* To / From on envelope front (body), from letter data */}
+      <div className="absolute inset-0 z-[2] flex flex-col items-center justify-center font-serif text-foreground pt-24">
+        <p className="text-base sm:text-lg text-center">
+          <span className="text-muted-foreground font-medium">To:</span>{" "}
+          <span className={cn(!toName || toName === "—" ? "opacity-70" : "")}>{toName}</span>
+        </p>
+        <p className="text-base sm:text-lg text-center mt-2">
+          <span className="text-muted-foreground font-medium">From:</span>{" "}
+          <span className={cn(!fromName || fromName === "—" ? "opacity-70" : "")}>{fromName}</span>
+        </p>
       </div>
       {/* Envelope doodles (read-only) */}
       {doodles.length > 0 && (

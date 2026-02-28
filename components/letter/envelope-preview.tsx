@@ -200,25 +200,26 @@ export function EnvelopePreview({ letter, onNewLetter }: EnvelopePreviewProps) {
             </svg>
           </div>
 
-          {/* To / From — lowered into envelope body, clear of flap */}
-          <div className="relative z-[2] flex flex-col gap-5 text-center font-serif text-lg text-foreground pt-20">
-            <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1">
-              <span className="text-muted-foreground">To:</span>
-              <span>{toName}</span>
-              <span className="text-muted-foreground">(</span>
+          {/* Envelope front: To / From on body (from letter.recipientName & letter.signature), clear of flap */}
+          <div className="relative z-[2] flex flex-col gap-4 text-center font-serif text-foreground pt-24">
+            <p className="text-base sm:text-lg">
+              <span className="text-muted-foreground font-medium">To:</span>{" "}
+              <span className={cn(!toName && "opacity-70")}>{toName}</span>
+            </p>
+            <p className="text-base sm:text-lg">
+              <span className="text-muted-foreground font-medium">From:</span>{" "}
+              <span className={cn(!fromName && "opacity-70")}>{fromName}</span>
+            </p>
+            <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 mt-2">
+              <span className="text-sm text-muted-foreground">Send to email:</span>
               <input
                 type="email"
                 value={toEmail}
                 onChange={(e) => setToEmail(e.target.value)}
                 placeholder="enter email"
-                className="flex-1 min-w-[140px] max-w-[200px] rounded border border-border bg-background/80 px-2 py-1 text-base font-serif text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                className="flex-1 min-w-[140px] max-w-[200px] rounded border border-border bg-background/80 px-2 py-1 text-sm font-serif text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
                 aria-label="Recipient email"
               />
-              <span className="text-muted-foreground">)</span>
-            </div>
-            <div>
-              <span className="text-muted-foreground mr-2">From:</span>
-              <span>{fromName}</span>
             </div>
           </div>
 

@@ -298,20 +298,20 @@ export function LetterCanvas({ onSeal }: LetterCanvasProps) {
               </span>
             </div>
 
-            <div className="relative z-[5] pt-8 px-12">
-              <div className="flex flex-wrap items-baseline gap-1 mb-2">
+            <div className="relative z-[5] px-12 pt-5">
+              <div className="flex flex-wrap items-baseline gap-1">
                 <span
-                  className={cn("text-sm text-muted-foreground shrink-0", letterBodyClass)}
+                  className={cn(letterBodyClass, fontStyle === "serif" && "italic")}
                   style={{ color: inkColorMap[inkColor] }}
                 >
-                  To:
+                  Dear
                 </span>
                 <input
                   id="recipient-field"
                   type="text"
                   value={recipientName}
                   onChange={(e) => setRecipientName(e.target.value)}
-                  placeholder="Recipient"
+                  placeholder="…"
                   className={cn(
                     "flex-1 min-w-[120px] bg-transparent focus:outline-none placeholder:opacity-25 text-base sm:text-lg",
                     letterBodyClass,
@@ -323,10 +323,13 @@ export function LetterCanvas({ onSeal }: LetterCanvasProps) {
                   }}
                   aria-label="Recipient name"
                 />
+                <span
+                  className={cn(letterBodyClass, fontStyle === "serif" && "italic")}
+                  style={{ color: inkColorMap[inkColor] }}
+                >
+                  ,
+                </span>
               </div>
-              <p className={cn(letterBodyClass, fontStyle === "serif" && "italic", "text-base sm:text-lg")} style={{ color: inkColorMap[inkColor] }}>
-                Dear {recipientName.trim() || "…"}
-              </p>
             </div>
 
             <div className="relative z-[5] px-12 pt-3 pb-6">
@@ -347,31 +350,23 @@ export function LetterCanvas({ onSeal }: LetterCanvasProps) {
               />
             </div>
 
-            <div className="relative z-[5] px-12 pb-10 pt-2">
-              <div className="flex flex-wrap items-baseline gap-1 justify-end">
-                <span
-                  className={cn("text-sm text-muted-foreground shrink-0", letterBodyClass)}
-                  style={{ color: inkColorMap[inkColor] }}
-                >
-                  From:
-                </span>
-                <input
-                  type="text"
-                  value={signature}
-                  onChange={(e) => setSignature(e.target.value)}
-                  placeholder="Your name"
-                  className={cn(
-                    "bg-transparent text-right focus:outline-none placeholder:opacity-25 w-48 text-base sm:text-lg",
-                    letterBodyClass,
-                    fontStyle === "serif" && "italic"
-                  )}
-                  style={{
-                    color: inkColorMap[inkColor],
-                    caretColor: inkColorMap[inkColor],
-                  }}
-                  aria-label="Signature"
-                />
-              </div>
+            <div className="relative z-[5] px-12 pb-10 text-right">
+              <input
+                type="text"
+                value={signature}
+                onChange={(e) => setSignature(e.target.value)}
+                placeholder="Your name"
+                className={cn(
+                  "bg-transparent text-right focus:outline-none placeholder:opacity-25 w-48 ml-auto block text-base sm:text-lg",
+                  letterBodyClass,
+                  fontStyle === "serif" && "italic"
+                )}
+                style={{
+                  color: inkColorMap[inkColor],
+                  caretColor: inkColorMap[inkColor],
+                }}
+                aria-label="Signature"
+              />
             </div>
 
             {pendingDecoration && (
