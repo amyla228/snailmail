@@ -230,6 +230,8 @@ export function EnvelopePreview({ letter, onNewLetter }: EnvelopePreviewProps) {
             </p>
           </div>
 
+          {/* Decorations above flap (z-[12]); wrapper has pointer-events-none so empty-area clicks reach envelope; children are draggable */}
+          <div className="absolute inset-0 z-[12] pointer-events-none" aria-hidden>
           {envelopeDecorations.map((deco) => (
             <DraggableElement
               key={deco.id}
@@ -247,6 +249,18 @@ export function EnvelopePreview({ letter, onNewLetter }: EnvelopePreviewProps) {
               </div>
             </DraggableElement>
           ))}
+          </div>
+          {/* Placement overlay: when a decoration is selected (washi/sticker), clicks anywhere place without re-opening tool; only one tool active at a time */}
+          {pendingDecoration && !isDoodleMode && (
+            <div
+              className="absolute inset-0 z-[25] cursor-crosshair"
+              aria-hidden
+              onClick={(e) => {
+                e.stopPropagation()
+                placeDecoration(e.clientX, e.clientY)
+              }}
+            />
+          )}
         </div>
       </div>
 

@@ -149,7 +149,7 @@ function ClosedEnvelope({ letter }: { letter: SavedLetterState }) {
         aspectRatio: "4 / 3",
       }}
     >
-      {/* Flap — same color as body, outline only (no horizontal divider) */}
+      {/* Flap — same color as body, outline only (no horizontal divider); z-10 so body content can sit above */}
       <div className="absolute top-0 left-0 right-0 w-full z-10" style={{ height: "48%" }}>
         <svg viewBox="0 0 400 192" className="w-full h-full" preserveAspectRatio="none">
           <path d="M0 0 L200 160 L400 0 Z" fill={envelopeBg} stroke="none" />
@@ -167,9 +167,9 @@ function ClosedEnvelope({ letter }: { letter: SavedLetterState }) {
           <span className={cn(!fromName || fromName === "—" ? "opacity-70" : "")}>{fromName}</span>
         </p>
       </div>
-      {/* Envelope doodles (read-only) */}
+      {/* Envelope doodles (read-only) — above flap so they are visible */}
       {doodles.length > 0 && (
-        <svg className="absolute inset-0 w-full h-full pointer-events-none z-[5]" preserveAspectRatio="none">
+        <svg className="absolute inset-0 w-full h-full pointer-events-none z-[11]" preserveAspectRatio="none">
           {doodles.map((stroke, i) =>
             stroke.points.length > 1 ? (
               <polyline
@@ -185,11 +185,11 @@ function ClosedEnvelope({ letter }: { letter: SavedLetterState }) {
           )}
         </svg>
       )}
-      {/* Envelope decorations (read-only) */}
+      {/* Envelope decorations (read-only) — above flap and doodles; same stacking order as sender */}
       {decorations.map((deco) => (
         <div
           key={deco.id}
-          className="absolute z-[6] drop-shadow-sm pointer-events-none"
+          className="absolute z-[12] drop-shadow-sm pointer-events-none"
           style={{ left: deco.x, top: deco.y, transform: "translate(-50%, -50%)" }}
         >
           {deco.type === "washi" && <WashiTape color={deco.data.color as "pink" | "green" | "yellow" | "blue"} rotation={deco.rotation ?? 0} />}
