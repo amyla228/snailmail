@@ -48,6 +48,7 @@ export function LetterCanvas({ onSeal }: LetterCanvasProps) {
     type: DecoElement["type"]
     data: Record<string, string>
   } | null>(null)
+  const [activeTool, setActiveTool] = useState<"none" | "ink" | "font" | "washi" | "stickers" | "doodle" | "photo">("none")
   const [placePosition, setPlacePosition] = useState({ x: 100, y: 80 })
   const canvasRef = useRef<HTMLDivElement>(null)
   const doodleContainerRef = useRef<HTMLDivElement>(null)
@@ -81,6 +82,16 @@ export function LetterCanvas({ onSeal }: LetterCanvasProps) {
 
   const startPlacement = useCallback((type: DecoElement["type"], data: Record<string, string> = {}) => {
     setPendingDecoration({ type, data })
+  }, [])
+
+  const handleToolClick = useCallback((tool: "ink" | "font" | "washi" | "stickers" | "doodle" | "photo") => {
+    setActiveTool(tool)
+    setPendingDecoration(null)
+    setIsDoodleMode(tool === "doodle")
+  }, [])
+
+  const handleClosePanel = useCallback(() => {
+    setActiveTool("none")
   }, [])
 
   const removeDecoration = useCallback((id: string) => {
@@ -521,6 +532,9 @@ export function LetterCanvas({ onSeal }: LetterCanvasProps) {
           onAddPhoto={(src) => startPlacement("photo", { src })}
           isDoodleMode={isDoodleMode}
           onDoodleModeChange={setIsDoodleMode}
+          openPanel={activeTool === "ink" || activeTool === "font" || activeTool === "washi" || activeTool === "stickers" ? activeTool : null}
+          onToolClick={handleToolClick}
+          onClosePanel={handleClosePanel}
         />
         <button
           onClick={handleSeal}

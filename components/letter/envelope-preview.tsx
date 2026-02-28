@@ -43,10 +43,18 @@ export function EnvelopePreview({ letter, onNewLetter }: EnvelopePreviewProps) {
   const [isDoodleMode, setIsDoodleMode] = useState(false)
   const [currentDoodleStroke, setCurrentDoodleStroke] = useState<{ x: number; y: number }[]>([])
   const [pendingDecoration, setPendingDecoration] = useState<{ type: DecoElement["type"]; data: Record<string, string> } | null>(null)
-  const [openPanel, setOpenPanel] = useState<string | null>(null)
+  const [activeTool, setActiveTool] = useState<"none" | "color" | "stickers" | "washi" | "doodle">("none")
   const envelopeRef = useRef<HTMLDivElement>(null)
   const currentStrokeRef = useRef<{ x: number; y: number }[]>([])
   const isDrawingRef = useRef(false)
+
+  const openPanel = activeTool === "color" || activeTool === "stickers" || activeTool === "washi" ? activeTool : null
+
+  const handleEnvelopeToolClick = useCallback((tool: "color" | "stickers" | "washi" | "doodle") => {
+    setActiveTool(tool)
+    setPendingDecoration(null)
+    setIsDoodleMode(tool === "doodle")
+  }, [])
 
   const getEnvelopeCoords = useCallback((clientX: number, clientY: number) => {
     if (!envelopeRef.current) return null
@@ -64,7 +72,7 @@ export function EnvelopePreview({ letter, onNewLetter }: EnvelopePreviewProps) {
     setEnvelopeDecorations((prev) => [...prev, { id, type: pendingDecoration.type, data: pendingDecoration.data, x, y, rotation }])
     if (pendingDecoration.type !== "sticker" && pendingDecoration.type !== "washi") {
       setPendingDecoration(null)
-      setOpenPanel(null)
+      setActiveTool("none")
     }
   }, [pendingDecoration])
 
@@ -200,27 +208,26 @@ export function EnvelopePreview({ letter, onNewLetter }: EnvelopePreviewProps) {
             </svg>
           </div>
 
-          {/* Envelope front: To / From on body (from letter.recipientName & letter.signature), clear of flap */}
+          {/* Envelope front: To / From on body (from letter.recipientName & letter.signature), email inline with To */}
           <div className="relative z-[2] flex flex-col gap-4 text-center font-serif text-foreground pt-24">
-            <p className="text-base sm:text-lg">
-              <span className="text-muted-foreground font-medium">To:</span>{" "}
+            <p className="text-base sm:text-lg flex flex-wrap items-center justify-center gap-x-2 gap-y-1">
+              <span className="text-muted-foreground font-medium">To:</span>
               <span className={cn(!toName && "opacity-70")}>{toName}</span>
+              <span className="text-muted-foreground/80">(</span>
+              <input
+                type="email"
+                value={toEmail}
+                onChange={(e) => setToEmail(e.target.value)}
+                placeholder="email"
+                className="flex-1 min-w-[120px] max-w-[200px] rounded border border-border bg-background/80 px-2 py-1 text-sm font-serif text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                aria-label="Recipient email"
+              />
+              <span className="text-muted-foreground/80">)</span>
             </p>
             <p className="text-base sm:text-lg">
               <span className="text-muted-foreground font-medium">From:</span>{" "}
               <span className={cn(!fromName && "opacity-70")}>{fromName}</span>
             </p>
-            <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 mt-2">
-              <span className="text-sm text-muted-foreground">Send to email:</span>
-              <input
-                type="email"
-                value={toEmail}
-                onChange={(e) => setToEmail(e.target.value)}
-                placeholder="enter email"
-                className="flex-1 min-w-[140px] max-w-[200px] rounded border border-border bg-background/80 px-2 py-1 text-sm font-serif text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
-                aria-label="Recipient email"
-              />
-            </div>
           </div>
 
           {envelopeDecorations.map((deco) => (
@@ -250,19 +257,19 @@ export function EnvelopePreview({ letter, onNewLetter }: EnvelopePreviewProps) {
       >
         <div className="flex flex-col items-center gap-3 relative">
           <div className="flex items-center gap-2 bg-card/90 backdrop-blur-sm rounded-2xl px-4 py-2.5 shadow-lg border border-border">
-            <button onClick={() => setOpenPanel(openPanel === "color" ? null : "color")} className={cn("p-2.5 rounded-xl transition-colors hover:bg-secondary", openPanel === "color" && "bg-secondary")} aria-label="Envelope color" title="Envelope color">
+            <button onClick={() => (openPanel === "color" ? setActiveTool("none") : handleEnvelopeToolClick("color"))} className={cn("p-2.5 rounded-xl transition-colors hover:bg-secondary", openPanel === "color" && "bg-secondary")} aria-label="Envelope color" title="Envelope color">
               <Palette className="w-5 h-5 text-foreground" />
             </button>
             <div className="w-px h-6 bg-border flex-shrink-0" />
-            <button onClick={() => { setIsDoodleMode(!isDoodleMode); setOpenPanel(null) }} className={cn("p-2.5 rounded-xl transition-colors hover:bg-secondary", isDoodleMode && "bg-secondary")} aria-label="Doodle" title="Doodle">
+            <button onClick={() => (isDoodleMode ? (setActiveTool("none"), setIsDoodleMode(false)) : handleEnvelopeToolClick("doodle"))} className={cn("p-2.5 rounded-xl transition-colors hover:bg-secondary", isDoodleMode && "bg-secondary")} aria-label="Doodle" title="Doodle">
               <Pencil className="w-5 h-5 text-foreground" />
             </button>
             <div className="w-px h-6 bg-border flex-shrink-0" />
-            <button onClick={() => setOpenPanel(openPanel === "stickers" ? null : "stickers")} className={cn("p-2.5 rounded-xl transition-colors hover:bg-secondary", openPanel === "stickers" && "bg-secondary")} aria-label="Stickers" title="Stickers">
+            <button onClick={() => (openPanel === "stickers" ? setActiveTool("none") : handleEnvelopeToolClick("stickers"))} className={cn("p-2.5 rounded-xl transition-colors hover:bg-secondary", openPanel === "stickers" && "bg-secondary")} aria-label="Stickers" title="Stickers">
               <StickerIcon className="w-5 h-5 text-foreground" />
             </button>
             <div className="w-px h-6 bg-border flex-shrink-0" />
-            <button onClick={() => setOpenPanel(openPanel === "washi" ? null : "washi")} className={cn("p-2.5 rounded-xl transition-colors hover:bg-secondary", openPanel === "washi" && "bg-secondary")} aria-label="Washi tape" title="Washi tape">
+            <button onClick={() => (openPanel === "washi" ? setActiveTool("none") : handleEnvelopeToolClick("washi"))} className={cn("p-2.5 rounded-xl transition-colors hover:bg-secondary", openPanel === "washi" && "bg-secondary")} aria-label="Washi tape" title="Washi tape">
               <Sparkles className="w-5 h-5 text-foreground" />
             </button>
           </div>
@@ -271,7 +278,7 @@ export function EnvelopePreview({ letter, onNewLetter }: EnvelopePreviewProps) {
               <p className="text-xs text-muted-foreground mb-3 font-serif">Envelope color</p>
               <div className="flex gap-3">
                 {ENVELOPE_COLORS.map((c) => (
-                  <button key={c.id} onClick={() => { setEnvelopeColor(c.hex); setOpenPanel(null) }} className={cn("w-9 h-9 rounded-full border-2 transition-all hover:scale-110", envelopeColor === c.hex ? "border-primary scale-110 shadow-md" : "border-border")} style={{ backgroundColor: c.hex }} aria-label={c.id} />
+                  <button key={c.id} onClick={() => { setEnvelopeColor(c.hex); setActiveTool("none") }} className={cn("w-9 h-9 rounded-full border-2 transition-all hover:scale-110", envelopeColor === c.hex ? "border-primary scale-110 shadow-md" : "border-border")} style={{ backgroundColor: c.hex }} aria-label={c.id} />
                 ))}
               </div>
             </div>

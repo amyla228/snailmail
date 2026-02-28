@@ -26,6 +26,12 @@ interface ToolbarProps {
   onAddPhoto: (src: string) => void
   isDoodleMode?: boolean
   onDoodleModeChange?: (active: boolean) => void
+  /** Controlled: which panel is open (ink | font | washi | stickers). When user clicks a tool, parent sets this. */
+  openPanel?: string | null
+  /** Called when user clicks a tool button. Parent should set active tool, clear pending decoration, set doodle mode, and update openPanel. */
+  onToolClick?: (tool: "ink" | "font" | "washi" | "stickers" | "doodle" | "photo") => void
+  /** Called when user makes a selection in a panel (e.g. ink color, font) so parent can close the panel. */
+  onClosePanel?: () => void
 }
 
 const inkColors: { id: InkColor; label: string; hex: string }[] = [
@@ -44,12 +50,22 @@ export function Toolbar({
   onAddPhoto,
   isDoodleMode = false,
   onDoodleModeChange,
+  openPanel = null,
+  onToolClick,
+  onClosePanel,
 }: ToolbarProps) {
-  const [openPanel, setOpenPanel] = useState<string | null>(null)
+  const [internalOpenPanel, setInternalOpenPanel] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const isControlled = onToolClick != null
+  const effectiveOpenPanel = isControlled ? (openPanel ?? null) : internalOpenPanel
 
   const togglePanel = (panel: string) => {
-    setOpenPanel(openPanel === panel ? null : panel)
+    if (isControlled) {
+      if (effectiveOpenPanel === panel) onClosePanel?.()
+      else onToolClick(panel as "ink" | "font" | "washi" | "stickers")
+    } else {
+      setInternalOpenPanel((prev) => (prev === panel ? null : panel))
+    }
   }
 
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -60,7 +76,7 @@ export function Toolbar({
       const result = ev.target?.result
       if (typeof result === "string") {
         onAddPhoto(result)
-        setOpenPanel(null)
+        onClosePanel?.()
       }
     }
     reader.readAsDataURL(file)
@@ -77,7 +93,7 @@ export function Toolbar({
           onClick={() => togglePanel("ink")}
           className={cn(
             "p-2.5 rounded-xl transition-colors hover:bg-secondary",
-            openPanel === "ink" && "bg-secondary"
+            effectiveOpenPanel === "ink" && "bg-secondary"
           )}
           aria-label="Ink color"
           title="Ink color"
@@ -90,7 +106,7 @@ export function Toolbar({
           onClick={() => togglePanel("font")}
           className={cn(
             "p-2.5 rounded-xl transition-colors hover:bg-secondary",
-            openPanel === "font" && "bg-secondary"
+            effectiveOpenPanel === "font" && "bg-secondary"
           )}
           aria-label="Font style"
           title="Font style"
@@ -105,7 +121,7 @@ export function Toolbar({
           onClick={() => togglePanel("washi")}
           className={cn(
             "p-2.5 rounded-xl transition-colors hover:bg-secondary",
-            openPanel === "washi" && "bg-secondary"
+            effectiveOpenPanel === "washi" && "bg-secondary"
           )}
           aria-label="Washi tape"
           title="Washi tape"
@@ -118,7 +134,7 @@ export function Toolbar({
           onClick={() => togglePanel("stickers")}
           className={cn(
             "p-2.5 rounded-xl transition-colors hover:bg-secondary",
-            openPanel === "stickers" && "bg-secondary"
+            effectiveOpenPanel === "stickers" && "bg-secondary"
           )}
           aria-label="Stickers"
           title="Stickers"
@@ -131,7 +147,7 @@ export function Toolbar({
         {/* Doodle / Draw */}
         {onDoodleModeChange && (
           <button
-            onClick={() => onDoodleModeChange(!isDoodleMode)}
+            onClick={() => (onToolClick ? onToolClick("doodle") : onDoodleModeChange(!isDoodleMode))}
             className={cn(
               "p-2.5 rounded-xl transition-colors hover:bg-secondary",
               isDoodleMode && "bg-secondary"
@@ -147,8 +163,14 @@ export function Toolbar({
 
         {/* Photo Upload */}
         <button
-          onClick={() => fileInputRef.current?.click()}
-          className="p-2.5 rounded-xl transition-colors hover:bg-secondary"
+          onClick={() => {
+            onToolClick?.("photo")
+            fileInputRef.current?.click()
+          }}
+          className={cn(
+            "p-2.5 rounded-xl transition-colors hover:bg-secondary",
+            openPanel === "photo" && "bg-secondary"
+          )}
           aria-label="Upload photo"
           title="Add photo"
         >
@@ -165,7 +187,7 @@ export function Toolbar({
       </div>
 
       {/* Panels */}
-      {openPanel === "ink" && (
+      {effectiveOpenPanel === "ink" && (
         <div className="absolute bottom-full mb-3 bg-card rounded-2xl shadow-xl border border-border p-4 animate-fade-in-up">
           <p className="text-xs text-muted-foreground mb-3 font-serif">Ink Color</p>
           <div className="flex gap-3">
@@ -174,7 +196,7 @@ export function Toolbar({
                 key={color.id}
                 onClick={() => {
                   onInkColorChange(color.id)
-                  setOpenPanel(null)
+                  onClosePanel?.()
                 }}
                 className={cn(
                   "w-9 h-9 rounded-full border-2 transition-all hover:scale-110",
@@ -189,12 +211,12 @@ export function Toolbar({
         </div>
       )}
 
-      {openPanel === "font" && (
+      {effectiveOpenPanel === "font" && (
         <div className="absolute bottom-full mb-3 bg-card rounded-2xl shadow-xl border border-border p-4 animate-fade-in-up">
           <p className="text-xs text-muted-foreground mb-3 font-serif">Style</p>
           <div className="flex gap-2">
             <button
-              onClick={() => { onFontStyleChange("handwriting"); setOpenPanel(null) }}
+              onClick={() => { onFontStyleChange("handwriting"); onClosePanel?.() }}
               className={cn(
                 "px-4 py-2 rounded-xl text-sm border transition-all",
                 fontStyle === "handwriting"
@@ -205,7 +227,7 @@ export function Toolbar({
               <span className="font-mono">Handwritten</span>
             </button>
             <button
-              onClick={() => { onFontStyleChange("serif"); setOpenPanel(null) }}
+              onClick={() => { onFontStyleChange("serif"); onClosePanel?.() }}
               className={cn(
                 "px-4 py-2 rounded-xl text-sm border transition-all",
                 fontStyle === "serif"
@@ -219,7 +241,7 @@ export function Toolbar({
         </div>
       )}
 
-      {openPanel === "washi" && (
+      {effectiveOpenPanel === "washi" && (
         <div className="absolute bottom-full mb-3 bg-card rounded-2xl shadow-xl border border-border p-4 animate-fade-in-up">
           <p className="text-xs text-muted-foreground mb-3 font-serif">Washi Tape</p>
           <div className="flex gap-2">
@@ -242,7 +264,7 @@ export function Toolbar({
         </div>
       )}
 
-      {openPanel === "stickers" && (
+      {effectiveOpenPanel === "stickers" && (
         <div className="absolute bottom-full mb-3 bg-card rounded-2xl shadow-xl border border-border p-4 animate-fade-in-up">
           <p className="text-xs text-muted-foreground mb-3 font-serif">Stickers</p>
           <div className="flex gap-2">
