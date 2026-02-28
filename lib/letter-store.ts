@@ -6,9 +6,16 @@
 export type InkColor = "brown" | "navy" | "black"
 export type FontStyle = "handwriting" | "serif"
 
+/** Stroke for doodle layer: array of points in container coordinates */
+export interface DoodleStroke {
+  points: { x: number; y: number }[]
+  color?: string
+  width?: number
+}
+
 export interface DecoElement {
   id: string
-  type: "washi" | "sticker" | "photo"
+  type: "washi" | "sticker" | "photo" | "waxSeal"
   data: Record<string, string>
   x: number
   y: number
@@ -31,6 +38,14 @@ export interface SavedLetterState {
   fontStyle: FontStyle
   decorations: DecoElement[]
   additionalPages?: LetterPage[]
+  /** Freehand doodles on the letter (serialized strokes) */
+  letterDoodles?: DoodleStroke[]
+  /** Envelope front color (hex) */
+  envelopeColor?: string
+  /** Decorations on envelope (stickers, washi, wax seal) */
+  envelopeDecorations?: DecoElement[]
+  /** Freehand doodles on envelope */
+  envelopeDoodles?: DoodleStroke[]
 }
 
 const store = new Map<string, SavedLetterState>()

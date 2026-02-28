@@ -7,6 +7,7 @@ import {
   Sparkles,
   Sticker as StickerIcon,
   Type,
+  Pencil,
 } from "lucide-react"
 import { useState, useRef } from "react"
 
@@ -23,6 +24,8 @@ interface ToolbarProps {
   onAddSticker: (type: StickerType) => void
   onAddWashi: (color: WashiColor) => void
   onAddPhoto: (src: string) => void
+  isDoodleMode?: boolean
+  onDoodleModeChange?: (active: boolean) => void
 }
 
 const inkColors: { id: InkColor; label: string; hex: string }[] = [
@@ -39,6 +42,8 @@ export function Toolbar({
   onAddSticker,
   onAddWashi,
   onAddPhoto,
+  isDoodleMode = false,
+  onDoodleModeChange,
 }: ToolbarProps) {
   const [openPanel, setOpenPanel] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -120,6 +125,23 @@ export function Toolbar({
         >
           <StickerIcon className="w-5 h-5 text-foreground" />
         </button>
+
+        <div className="w-px h-6 bg-border" />
+
+        {/* Doodle / Draw */}
+        {onDoodleModeChange && (
+          <button
+            onClick={() => onDoodleModeChange(!isDoodleMode)}
+            className={cn(
+              "p-2.5 rounded-xl transition-colors hover:bg-secondary",
+              isDoodleMode && "bg-secondary"
+            )}
+            aria-label="Doodle"
+            title="Doodle on letter"
+          >
+            <Pencil className="w-5 h-5 text-foreground" />
+          </button>
+        )}
 
         <div className="w-px h-6 bg-border" />
 

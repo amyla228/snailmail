@@ -5,6 +5,9 @@ import { useState, useEffect } from "react"
 import { supabase } from "@/lib/supabase"
 import type { SavedLetterState } from "@/lib/letter-store"
 import { LetterView } from "@/components/letter/letter-view"
+import { WashiTape } from "@/components/letter/washi-tape"
+import { Sticker } from "@/components/letter/sticker"
+import { WaxSeal } from "@/components/letter/wax-seal"
 import { cn } from "@/lib/utils"
 
 export default function LetterPage() {
@@ -106,7 +109,7 @@ export default function LetterPage() {
             aria-label="Open envelope"
           >
             <div className={cn(isOpening && "animate-envelope-open")}>
-              <ClosedEnvelope />
+              <ClosedEnvelope letter={letter} />
             </div>
           </button>
         </>
@@ -128,9 +131,12 @@ export default function LetterPage() {
   )
 }
 
-function ClosedEnvelope() {
-  const envelopeBg = "#fef3ed"
+function ClosedEnvelope({ letter }: { letter: SavedLetterState }) {
+  const envelopeBg = letter.envelopeColor ?? "#fef3ed"
   const borderColor = "#e5ddd8"
+  const decorations = letter.envelopeDecorations ?? []
+  const doodles = letter.envelopeDoodles ?? []
+  type StickerType = "heart" | "star" | "flower" | "butterfly" | "sun"
   return (
     <div
       className="relative w-full rounded-2xl overflow-hidden border"
@@ -141,18 +147,44 @@ function ClosedEnvelope() {
         aspectRatio: "4 / 3",
       }}
     >
-      {/* Flap — same color as body, shape only */}
+      {/* Flap — same color as body, outline only (no horizontal divider) */}
       <div className="absolute top-0 left-0 right-0 w-full z-10" style={{ height: "48%" }}>
         <svg viewBox="0 0 400 192" className="w-full h-full" preserveAspectRatio="none">
-          <path
-            d="M0 0 L200 160 L400 0 L400 192 L0 192 Z"
-            fill={envelopeBg}
-            stroke={borderColor}
-            strokeWidth="1"
-          />
+          <path d="M0 0 L200 160 L400 0 Z" fill={envelopeBg} stroke="none" />
           <path d="M0 0 L200 160 L400 0" fill="none" stroke={borderColor} strokeWidth="1" />
         </svg>
       </div>
+      {/* Envelope doodles (read-only) */}
+      {doodles.length > 0 && (
+        <svg className="absolute inset-0 w-full h-full pointer-events-none z-[5]" preserveAspectRatio="none">
+          {doodles.map((stroke, i) =>
+            stroke.points.length > 1 ? (
+              <polyline
+                key={i}
+                points={stroke.points.map((p) => `${p.x},${p.y}`).join(" ")}
+                fill="none"
+                stroke={stroke.color ?? "#4a3728"}
+                strokeWidth={stroke.width ?? 2}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            ) : null
+          )}
+        </svg>
+      )}
+      {/* Envelope decorations (read-only) */}
+      {decorations.map((deco) => (
+        <div
+          key={deco.id}
+          className="absolute z-[6] drop-shadow-sm pointer-events-none"
+          style={{ left: deco.x, top: deco.y, transform: "translate(-50%, -50%)" }}
+        >
+          {deco.type === "washi" && <WashiTape color={deco.data.color as "pink" | "green" | "yellow" | "blue"} rotation={deco.rotation ?? 0} />}
+          {deco.type === "sticker" && <Sticker type={deco.data.stickerType as StickerType} />}
+          {deco.type === "waxSeal" && <WaxSeal />}
+          {deco.type === "photo" && <Sticker type="heart" />}
+        </div>
+      ))}
     </div>
   )
 }

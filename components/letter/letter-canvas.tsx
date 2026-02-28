@@ -2,11 +2,12 @@
 
 import { useState, useRef, useCallback, useEffect } from "react"
 import { cn } from "@/lib/utils"
-import type { SavedLetterState, DecoElement, LetterPage } from "@/lib/letter-store"
+import type { SavedLetterState, DecoElement, LetterPage, DoodleStroke } from "@/lib/letter-store"
 import { DraggableElement } from "./draggable-element"
 import { WashiTape } from "./washi-tape"
 import { Sticker } from "./sticker"
 import { Polaroid } from "./polaroid"
+import { WaxSeal } from "./wax-seal"
 import { Toolbar } from "./toolbar"
 
 type InkColor = SavedLetterState["inkColor"]
@@ -22,6 +23,7 @@ const PLACEHOLDER_ROTATION: Record<DecoElement["type"], number> = {
   washi: -6,
   sticker: 0,
   photo: -3,
+  waxSeal: 0,
 }
 
 const TOOLBAR_HEIGHT_PX = 96
@@ -39,12 +41,17 @@ export function LetterCanvas({ onSeal }: LetterCanvasProps) {
   const [inkColor, setInkColor] = useState<InkColor>("brown")
   const [fontStyle, setFontStyle] = useState<FontStyle>("handwriting")
   const [decorations, setDecorations] = useState<DecoElement[]>([])
+  const [letterDoodles, setLetterDoodles] = useState<DoodleStroke[]>([])
+  const [currentDoodleStroke, setCurrentDoodleStroke] = useState<{ x: number; y: number }[]>([])
+  const [isDoodleMode, setIsDoodleMode] = useState(false)
   const [pendingDecoration, setPendingDecoration] = useState<{
     type: DecoElement["type"]
     data: Record<string, string>
   } | null>(null)
   const [placePosition, setPlacePosition] = useState({ x: 100, y: 80 })
   const canvasRef = useRef<HTMLDivElement>(null)
+  const doodleContainerRef = useRef<HTMLDivElement>(null)
+  const currentStrokeRef = useRef<{ x: number; y: number }[]>([])
 
   const today = new Date().toLocaleDateString("en-US", {
     year: "numeric",
@@ -106,12 +113,64 @@ export function LetterCanvas({ onSeal }: LetterCanvasProps) {
 
   const handleCanvasClick = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
-      if (!pendingDecoration) return
+      if (!pendingDecoration || isDoodleMode) return
       if ((e.target as HTMLElement).closest("[data-draggable-decoration]")) return
       placeDecoration(e.clientX, e.clientY)
     },
-    [pendingDecoration, placeDecoration]
+    [pendingDecoration, placeDecoration, isDoodleMode]
   )
+
+  const getCanvasCoords = useCallback((clientX: number, clientY: number) => {
+    if (!canvasRef.current) return null
+    const rect = canvasRef.current.getBoundingClientRect()
+    const x = Math.max(0, Math.min(rect.width, clientX - rect.left))
+    const y = Math.max(0, Math.min(rect.height, clientY - rect.top))
+    return { x, y }
+  }, [])
+
+  const handleDoodlePointerDown = useCallback(
+    (e: React.PointerEvent) => {
+      if (!isDoodleMode) return
+      e.preventDefault()
+      const coords = getCanvasCoords(e.clientX, e.clientY)
+      if (coords) {
+        currentStrokeRef.current = [coords]
+        setCurrentDoodleStroke([coords])
+      }
+    },
+    [isDoodleMode, getCanvasCoords]
+  )
+
+  const handleDoodlePointerMove = useCallback(
+    (e: React.PointerEvent) => {
+      if (!isDoodleMode) return
+      e.preventDefault()
+      const coords = getCanvasCoords(e.clientX, e.clientY)
+      if (!coords) return
+      currentStrokeRef.current = [...currentStrokeRef.current, coords]
+      setCurrentDoodleStroke(currentStrokeRef.current)
+    },
+    [isDoodleMode, getCanvasCoords]
+  )
+
+  const handleDoodlePointerUp = useCallback(() => {
+    if (!isDoodleMode) return
+    const stroke = currentStrokeRef.current
+    if (stroke.length > 1) {
+      setLetterDoodles((prev) => [...prev, { points: [...stroke] }])
+    }
+    currentStrokeRef.current = []
+    setCurrentDoodleStroke([])
+  }, [isDoodleMode])
+
+  const handleDoodlePointerLeave = useCallback(() => {
+    const stroke = currentStrokeRef.current
+    if (stroke.length > 1) {
+      setLetterDoodles((prev) => [...prev, { points: [...stroke] }])
+    }
+    currentStrokeRef.current = []
+    setCurrentDoodleStroke([])
+  }, [])
 
   const handleSeal = () => {
     if (!letterText.trim()) return
@@ -134,6 +193,7 @@ export function LetterCanvas({ onSeal }: LetterCanvasProps) {
         rotation: d.rotation,
       })),
       additionalPages: additionalPages.length > 0 ? additionalPages : undefined,
+      letterDoodles: letterDoodles.length > 0 ? letterDoodles : undefined,
     })
   }
 
@@ -164,6 +224,44 @@ export function LetterCanvas({ onSeal }: LetterCanvasProps) {
             onMouseMove={handleCanvasMouseMove}
             onClick={handleCanvasClick}
           >
+            {/* Doodle layer — within letter bounds, only active in doodle mode */}
+            <div
+              ref={doodleContainerRef}
+              className="absolute inset-0 z-[8]"
+              style={{ pointerEvents: isDoodleMode ? "auto" : "none" }}
+              onPointerDown={handleDoodlePointerDown}
+              onPointerMove={handleDoodlePointerMove}
+              onPointerUp={handleDoodlePointerUp}
+              onPointerLeave={handleDoodlePointerLeave}
+              onPointerCancel={handleDoodlePointerUp}
+            >
+              <svg className="absolute inset-0 w-full h-full" preserveAspectRatio="none">
+                {letterDoodles.map((stroke, i) =>
+                  stroke.points.length > 1 ? (
+                    <polyline
+                      key={i}
+                      points={stroke.points.map((p) => `${p.x},${p.y}`).join(" ")}
+                      fill="none"
+                      stroke="var(--ink-brown)"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  ) : null
+                )}
+                {currentDoodleStroke.length > 1 && (
+                  <polyline
+                    points={currentDoodleStroke.map((p) => `${p.x},${p.y}`).join(" ")}
+                    fill="none"
+                    stroke="var(--ink-brown)"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                )}
+              </svg>
+            </div>
+
             <div
               className="absolute inset-0 pointer-events-none opacity-[0.05]"
               style={{
@@ -288,6 +386,9 @@ export function LetterCanvas({ onSeal }: LetterCanvasProps) {
                     rotation={PLACEHOLDER_ROTATION.photo}
                   />
                 )}
+                {pendingDecoration.type === "waxSeal" && (
+                  <WaxSeal />
+                )}
               </div>
             )}
 
@@ -325,6 +426,7 @@ export function LetterCanvas({ onSeal }: LetterCanvasProps) {
                       rotation={deco.rotation ?? PLACEHOLDER_ROTATION.photo}
                     />
                   )}
+                  {deco.type === "waxSeal" && <WaxSeal />}
                 </div>
               </DraggableElement>
             ))}
@@ -402,6 +504,8 @@ export function LetterCanvas({ onSeal }: LetterCanvasProps) {
           onAddSticker={(type) => startPlacement("sticker", { stickerType: type })}
           onAddWashi={(color) => startPlacement("washi", { color })}
           onAddPhoto={(src) => startPlacement("photo", { src })}
+          isDoodleMode={isDoodleMode}
+          onDoodleModeChange={setIsDoodleMode}
         />
         <button
           onClick={handleSeal}

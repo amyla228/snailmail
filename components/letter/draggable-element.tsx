@@ -40,6 +40,7 @@ export function DraggableElement({
       style={{
         left: position.x,
         top: position.y,
+        transform: "translate(-50%, -50%)",
         cursor: isDragging ? "grabbing" : "grab",
       }}
       {...handlers}

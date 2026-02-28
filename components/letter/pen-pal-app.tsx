@@ -26,7 +26,7 @@ export function PenPalApp() {
       className="min-h-screen bg-background"
       style={{ minHeight: "100vh", backgroundColor: "#faf7f5", color: "#3a3330" }}
     >
-      <main className={`pt-2 ${view === "writing" ? "pb-28" : "pb-12"}`}>
+      <main className={`pt-2 ${view === "writing" ? "pb-28" : "pb-28"}`}>
         {view === "writing" && <LetterCanvas onSeal={handleSeal} />}
 
         {view === "envelope" && pendingLetter && (

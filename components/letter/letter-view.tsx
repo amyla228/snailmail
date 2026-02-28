@@ -4,7 +4,8 @@ import { cn } from "@/lib/utils"
 import { WashiTape } from "./washi-tape"
 import { Sticker } from "./sticker"
 import { Polaroid } from "./polaroid"
-import type { SavedLetterState } from "@/lib/letter-store"
+import { WaxSeal } from "./wax-seal"
+import type { SavedLetterState, DoodleStroke } from "@/lib/letter-store"
 
 const inkColorMap: Record<SavedLetterState["inkColor"], string> = {
   brown: "var(--ink-brown)",
@@ -126,6 +127,7 @@ export function LetterView({ letter, className }: LetterViewProps) {
           style={{
             left: deco.x,
             top: deco.y,
+            transform: "translate(-50%, -50%)",
           }}
         >
           {deco.type === "washi" && (
@@ -152,8 +154,26 @@ export function LetterView({ letter, className }: LetterViewProps) {
               rotation={deco.rotation ?? 0}
             />
           )}
+          {deco.type === "waxSeal" && <WaxSeal />}
         </div>
       ))}
+      {(letter.letterDoodles?.length ?? 0) > 0 && (
+        <svg className="absolute inset-0 w-full h-full pointer-events-none z-[6]" preserveAspectRatio="none">
+          {letter.letterDoodles!.map((stroke, i) =>
+            stroke.points.length > 1 ? (
+              <polyline
+                key={i}
+                points={stroke.points.map((p) => `${p.x},${p.y}`).join(" ")}
+                fill="none"
+                stroke={stroke.color ?? "var(--ink-brown)"}
+                strokeWidth={stroke.width ?? 2}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            ) : null
+          )}
+        </svg>
+      )}
     </div>
   )
 }
