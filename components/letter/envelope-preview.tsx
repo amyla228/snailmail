@@ -7,7 +7,7 @@ import { supabase } from "@/lib/supabase"
 import { DraggableElement } from "./draggable-element"
 import { WashiTape } from "./washi-tape"
 import { Sticker } from "./sticker"
-import { WaxSeal, WaxSealToolbarIcon } from "./wax-seal"
+import { WaxSeal } from "./wax-seal"
 import { Palette, Pencil, Sticker as StickerIcon } from "lucide-react"
 
 const ENVELOPE_COLORS = [
@@ -153,22 +153,23 @@ export function EnvelopePreview({ letter, onNewLetter }: EnvelopePreviewProps) {
           }}
           onClick={handleEnvelopeClick}
         >
-          {/* Front of envelope: folded triangular flap overlapping body */}
-          <div className="absolute top-0 left-0 right-0 w-full z-10" style={{ height: "42%" }}>
-            <svg viewBox="0 0 400 168" className="w-full h-full block" preserveAspectRatio="none">
+          {/* Front of envelope: folded triangular flap overlapping body (~45% height, tip extends lower) */}
+          <div className="absolute top-0 left-0 right-0 w-full z-10" style={{ height: "45%" }}>
+            <svg viewBox="0 0 400 200" className="w-full h-full block" preserveAspectRatio="none">
               <defs>
                 <linearGradient id="envelope-flap-shade-edit" x1="0%" y1="0%" x2="0%" y2="100%">
                   <stop offset="0%" stopColor="rgba(0,0,0,0.06)" />
                   <stop offset="100%" stopColor="transparent" />
                 </linearGradient>
               </defs>
+              {/* Flap triangle only — no bottom edge to avoid a horizontal divider line */}
               <path
-                d="M0 0 L200 140 L400 0 L400 168 L0 168 Z"
+                d="M0 0 L200 175 L400 0 Z"
                 fill={envelopeColor}
                 stroke="rgba(229, 221, 216, 0.9)"
                 strokeWidth="1"
               />
-              <path d="M0 0 L200 140 L400 0" fill="url(#envelope-flap-shade-edit)" stroke="rgba(200,190,180,0.4)" strokeWidth="1" />
+              <path d="M0 0 L200 175 L400 0" fill="url(#envelope-flap-shade-edit)" stroke="rgba(200,190,180,0.35)" strokeWidth="1" />
             </svg>
           </div>
 
@@ -196,7 +197,8 @@ export function EnvelopePreview({ letter, onNewLetter }: EnvelopePreviewProps) {
             </svg>
           </div>
 
-          <div className="relative z-[2] flex flex-col gap-5 text-center font-serif text-lg text-foreground">
+          {/* To / From — lowered into envelope body, clear of flap */}
+          <div className="relative z-[2] flex flex-col gap-5 text-center font-serif text-lg text-foreground pt-20">
             <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1">
               <span className="text-muted-foreground">To:</span>
               <span>{toName}</span>
@@ -243,21 +245,17 @@ export function EnvelopePreview({ letter, onNewLetter }: EnvelopePreviewProps) {
         style={{ bottom: 0, paddingBottom: Math.max(40, 16), backgroundColor: "rgba(250, 247, 245, 0.92)", backdropFilter: "blur(8px)", zIndex: 10 }}
       >
         <div className="flex flex-col items-center gap-3 relative">
-          <div className="flex items-center gap-1.5 bg-card/90 backdrop-blur-sm rounded-2xl px-4 py-2.5 shadow-lg border border-border">
+          <div className="flex items-center gap-2 bg-card/90 backdrop-blur-sm rounded-2xl px-4 py-2.5 shadow-lg border border-border">
             <button onClick={() => setOpenPanel(openPanel === "color" ? null : "color")} className={cn("p-2.5 rounded-xl transition-colors hover:bg-secondary", openPanel === "color" && "bg-secondary")} aria-label="Envelope color" title="Envelope color">
               <Palette className="w-5 h-5 text-foreground" />
             </button>
-            <div className="w-px h-6 bg-border" />
+            <div className="w-px h-6 bg-border flex-shrink-0" />
             <button onClick={() => { setIsDoodleMode(!isDoodleMode); setOpenPanel(null) }} className={cn("p-2.5 rounded-xl transition-colors hover:bg-secondary", isDoodleMode && "bg-secondary")} aria-label="Doodle" title="Doodle">
               <Pencil className="w-5 h-5 text-foreground" />
             </button>
-            <div className="w-px h-6 bg-border" />
+            <div className="w-px h-6 bg-border flex-shrink-0" />
             <button onClick={() => setOpenPanel(openPanel === "stickers" ? null : "stickers")} className={cn("p-2.5 rounded-xl transition-colors hover:bg-secondary", openPanel === "stickers" && "bg-secondary")} aria-label="Stickers" title="Stickers">
               <StickerIcon className="w-5 h-5 text-foreground" />
-            </button>
-            <div className="w-px h-6 bg-border" />
-            <button onClick={() => { setPendingDecoration({ type: "waxSeal", data: {} }); setOpenPanel(null) }} className={cn("p-2.5 rounded-xl transition-colors hover:bg-secondary", pendingDecoration?.type === "waxSeal" && "bg-secondary")} aria-label="Wax seal" title="Wax seal">
-              <WaxSealToolbarIcon />
             </button>
           </div>
           {openPanel === "color" && (
