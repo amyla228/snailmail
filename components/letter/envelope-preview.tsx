@@ -8,7 +8,7 @@ import { DraggableElement } from "./draggable-element"
 import { WashiTape } from "./washi-tape"
 import { Sticker } from "./sticker"
 import { WaxSeal } from "./wax-seal"
-import { Palette, Pencil, Sticker as StickerIcon } from "lucide-react"
+import { Palette, Pencil, Sparkles, Sticker as StickerIcon } from "lucide-react"
 
 const ENVELOPE_COLORS = [
   { id: "cream", hex: "#fef3ed" },
@@ -26,6 +26,7 @@ const PLACEHOLDER_ROTATION: Record<DecoElement["type"], number> = {
 }
 
 type StickerType = "heart" | "star" | "flower" | "butterfly" | "sun"
+type WashiColor = "pink" | "green" | "yellow" | "blue"
 
 interface EnvelopePreviewProps {
   /** Letter state; if no id, we save to Supabase on Send Letter then open Gmail */
@@ -61,8 +62,10 @@ export function EnvelopePreview({ letter, onNewLetter }: EnvelopePreviewProps) {
     const id = `${pendingDecoration.type}-${Date.now()}`
     const rotation = PLACEHOLDER_ROTATION[pendingDecoration.type]
     setEnvelopeDecorations((prev) => [...prev, { id, type: pendingDecoration.type, data: pendingDecoration.data, x, y, rotation }])
-    setPendingDecoration(null)
-    setOpenPanel(null)
+    if (pendingDecoration.type !== "sticker" && pendingDecoration.type !== "washi") {
+      setPendingDecoration(null)
+      setOpenPanel(null)
+    }
   }, [pendingDecoration])
 
   const removeDecoration = useCallback((id: string) => {
@@ -257,6 +260,10 @@ export function EnvelopePreview({ letter, onNewLetter }: EnvelopePreviewProps) {
             <button onClick={() => setOpenPanel(openPanel === "stickers" ? null : "stickers")} className={cn("p-2.5 rounded-xl transition-colors hover:bg-secondary", openPanel === "stickers" && "bg-secondary")} aria-label="Stickers" title="Stickers">
               <StickerIcon className="w-5 h-5 text-foreground" />
             </button>
+            <div className="w-px h-6 bg-border flex-shrink-0" />
+            <button onClick={() => setOpenPanel(openPanel === "washi" ? null : "washi")} className={cn("p-2.5 rounded-xl transition-colors hover:bg-secondary", openPanel === "washi" && "bg-secondary")} aria-label="Washi tape" title="Washi tape">
+              <Sparkles className="w-5 h-5 text-foreground" />
+            </button>
           </div>
           {openPanel === "color" && (
             <div className="absolute bottom-full mb-3 bg-card rounded-2xl shadow-xl border border-border p-4 animate-fade-in-up">
@@ -273,13 +280,23 @@ export function EnvelopePreview({ letter, onNewLetter }: EnvelopePreviewProps) {
               <p className="text-xs text-muted-foreground mb-3 font-serif">Stickers</p>
               <div className="flex gap-2">
                 {(["heart", "star", "flower", "butterfly", "sun"] as StickerType[]).map((type) => (
-                  <button key={type} onClick={() => { setPendingDecoration({ type: "sticker", data: { stickerType: type } }); setOpenPanel(null) }} className="w-10 h-10 rounded-xl flex items-center justify-center transition-all hover:scale-110 hover:bg-secondary text-lg" aria-label={`${type} sticker`}>
+                  <button key={type} onClick={() => setPendingDecoration({ type: "sticker", data: { stickerType: type } })} className={cn("w-10 h-10 rounded-xl flex items-center justify-center transition-all hover:scale-110 hover:bg-secondary text-lg", pendingDecoration?.type === "sticker" && pendingDecoration?.data?.stickerType === type && "bg-secondary ring-2 ring-primary")} aria-label={`${type} sticker`}>
                     {type === "heart" && <svg viewBox="0 0 24 24" className="w-6 h-6"><path d="M12 21 C6 15 1 11 1 7 C1 3 4 1 7 1 C9 1 11 3 12 4 C13 3 15 1 17 1 C20 1 23 3 23 7 C23 11 18 15 12 21Z" fill="#e8a0a0"/></svg>}
                     {type === "star" && <svg viewBox="0 0 24 24" className="w-6 h-6"><path d="M12 2 L14 9 L22 9 L16 14 L18 21 L12 17 L6 21 L8 14 L2 9 L10 9Z" fill="#f0d080"/></svg>}
                     {type === "flower" && <svg viewBox="0 0 24 24" className="w-6 h-6"><circle cx="12" cy="7" r="4" fill="#f5cdd2" opacity="0.8"/><circle cx="17" cy="11" r="4" fill="#f5cdd2" opacity="0.8"/><circle cx="15" cy="17" r="4" fill="#f5cdd2" opacity="0.8"/><circle cx="9" cy="17" r="4" fill="#f5cdd2" opacity="0.8"/><circle cx="7" cy="11" r="4" fill="#f5cdd2" opacity="0.8"/><circle cx="12" cy="12" r="3" fill="#f5e5a8"/></svg>}
                     {type === "butterfly" && <svg viewBox="0 0 24 24" className="w-6 h-6"><ellipse cx="8" cy="9" rx="6" ry="5" fill="#c2dcc8" opacity="0.8" transform="rotate(-20 8 9)"/><ellipse cx="16" cy="9" rx="6" ry="5" fill="#c2dcc8" opacity="0.8" transform="rotate(20 16 9)"/><line x1="12" y1="6" x2="12" y2="20" stroke="#8a817c" strokeWidth="0.8"/></svg>}
                     {type === "sun" && <svg viewBox="0 0 24 24" className="w-6 h-6"><circle cx="12" cy="12" r="5" fill="#f5e5a8" opacity="0.85"/>{[0, 45, 90, 135, 180, 225, 270, 315].map((a) => <line key={a} x1="12" y1="12" x2={12 + 9 * Math.cos((a * Math.PI) / 180)} y2={12 + 9 * Math.sin((a * Math.PI) / 180)} stroke="#e8c060" strokeWidth="1.5" strokeLinecap="round" opacity="0.6"/>)}</svg>}
                   </button>
+                ))}
+              </div>
+            </div>
+          )}
+          {openPanel === "washi" && (
+            <div className="absolute bottom-full mb-3 bg-card rounded-2xl shadow-xl border border-border p-4 animate-fade-in-up">
+              <p className="text-xs text-muted-foreground mb-3 font-serif">Washi Tape</p>
+              <div className="flex gap-2">
+                {(["pink", "green", "yellow", "blue"] as WashiColor[]).map((color) => (
+                  <button key={color} onClick={() => setPendingDecoration({ type: "washi", data: { color } })} className={cn("w-16 h-6 rounded-sm transition-all hover:scale-105 border border-border/30", color === "pink" && "bg-washi-pink", color === "green" && "bg-washi-green", color === "yellow" && "bg-washi-yellow", color === "blue" && "bg-washi-blue", pendingDecoration?.type === "washi" && pendingDecoration?.data?.color === color && "ring-2 ring-primary")} aria-label={`${color} washi tape`} title={`${color} washi`} />
                 ))}
               </div>
             </div>

@@ -226,7 +226,7 @@ export function Toolbar({
             {(["pink", "green", "yellow", "blue"] as WashiColor[]).map((color) => (
               <button
                 key={color}
-                onClick={() => { onAddWashi(color); setOpenPanel(null) }}
+                onClick={() => onAddWashi(color)}
                 className={cn(
                   "w-16 h-6 rounded-sm transition-all hover:scale-105 border border-border/30",
                   color === "pink" && "bg-washi-pink",
@@ -249,7 +249,7 @@ export function Toolbar({
             {(["heart", "star", "flower", "butterfly", "sun"] as StickerType[]).map((type) => (
               <button
                 key={type}
-                onClick={() => { onAddSticker(type); setOpenPanel(null) }}
+                onClick={() => onAddSticker(type)}
                 className="w-10 h-10 rounded-xl flex items-center justify-center transition-all hover:scale-110 hover:bg-secondary text-lg"
                 aria-label={`${type} sticker`}
                 title={type}
