@@ -52,6 +52,7 @@ export function LetterCanvas({ onSeal }: LetterCanvasProps) {
   const canvasRef = useRef<HTMLDivElement>(null)
   const doodleContainerRef = useRef<HTMLDivElement>(null)
   const currentStrokeRef = useRef<{ x: number; y: number }[]>([])
+  const isDrawingRef = useRef(false)
 
   const today = new Date().toLocaleDateString("en-US", {
     year: "numeric",
@@ -132,6 +133,7 @@ export function LetterCanvas({ onSeal }: LetterCanvasProps) {
     (e: React.PointerEvent) => {
       if (!isDoodleMode) return
       e.preventDefault()
+      isDrawingRef.current = true
       const coords = getCanvasCoords(e.clientX, e.clientY)
       if (coords) {
         currentStrokeRef.current = [coords]
@@ -143,7 +145,7 @@ export function LetterCanvas({ onSeal }: LetterCanvasProps) {
 
   const handleDoodlePointerMove = useCallback(
     (e: React.PointerEvent) => {
-      if (!isDoodleMode) return
+      if (!isDoodleMode || !isDrawingRef.current) return
       e.preventDefault()
       const coords = getCanvasCoords(e.clientX, e.clientY)
       if (!coords) return
@@ -155,6 +157,7 @@ export function LetterCanvas({ onSeal }: LetterCanvasProps) {
 
   const handleDoodlePointerUp = useCallback(() => {
     if (!isDoodleMode) return
+    isDrawingRef.current = false
     const stroke = currentStrokeRef.current
     if (stroke.length > 1) {
       setLetterDoodles((prev) => [...prev, { points: [...stroke] }])
@@ -164,6 +167,7 @@ export function LetterCanvas({ onSeal }: LetterCanvasProps) {
   }, [isDoodleMode])
 
   const handleDoodlePointerLeave = useCallback(() => {
+    isDrawingRef.current = false
     const stroke = currentStrokeRef.current
     if (stroke.length > 1) {
       setLetterDoodles((prev) => [...prev, { points: [...stroke] }])

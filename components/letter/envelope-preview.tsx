@@ -7,7 +7,7 @@ import { supabase } from "@/lib/supabase"
 import { DraggableElement } from "./draggable-element"
 import { WashiTape } from "./washi-tape"
 import { Sticker } from "./sticker"
-import { WaxSeal } from "./wax-seal"
+import { WaxSeal, WaxSealToolbarIcon } from "./wax-seal"
 import { Palette, Pencil, Sticker as StickerIcon } from "lucide-react"
 
 const ENVELOPE_COLORS = [
@@ -45,6 +45,7 @@ export function EnvelopePreview({ letter, onNewLetter }: EnvelopePreviewProps) {
   const [openPanel, setOpenPanel] = useState<string | null>(null)
   const envelopeRef = useRef<HTMLDivElement>(null)
   const currentStrokeRef = useRef<{ x: number; y: number }[]>([])
+  const isDrawingRef = useRef(false)
 
   const getEnvelopeCoords = useCallback((clientX: number, clientY: number) => {
     if (!envelopeRef.current) return null
@@ -80,18 +81,22 @@ export function EnvelopePreview({ letter, onNewLetter }: EnvelopePreviewProps) {
   const handleDoodleDown = useCallback((e: React.PointerEvent) => {
     if (!isDoodleMode) return
     e.preventDefault()
+    isDrawingRef.current = true
     const coords = getEnvelopeCoords(e.clientX, e.clientY)
     if (coords) { currentStrokeRef.current = [coords]; setCurrentDoodleStroke([coords]) }
   }, [isDoodleMode, getEnvelopeCoords])
 
   const handleDoodleMove = useCallback((e: React.PointerEvent) => {
-    if (!isDoodleMode) return
+    if (!isDoodleMode || !isDrawingRef.current) return
     e.preventDefault()
     const coords = getEnvelopeCoords(e.clientX, e.clientY)
-    if (coords) { currentStrokeRef.current = [...currentStrokeRef.current, coords]; setCurrentDoodleStroke(currentStrokeRef.current) }
+    if (!coords) return
+    currentStrokeRef.current = [...currentStrokeRef.current, coords]
+    setCurrentDoodleStroke(currentStrokeRef.current)
   }, [isDoodleMode, getEnvelopeCoords])
 
   const handleDoodleUp = useCallback(() => {
+    isDrawingRef.current = false
     const stroke = currentStrokeRef.current
     if (stroke.length > 1) setEnvelopeDoodles((prev) => [...prev, { points: [...stroke] }])
     currentStrokeRef.current = []
@@ -229,7 +234,7 @@ export function EnvelopePreview({ letter, onNewLetter }: EnvelopePreviewProps) {
             </button>
             <div className="w-px h-6 bg-border" />
             <button onClick={() => { setPendingDecoration({ type: "waxSeal", data: {} }); setOpenPanel(null) }} className={cn("p-2.5 rounded-xl transition-colors hover:bg-secondary", pendingDecoration?.type === "waxSeal" && "bg-secondary")} aria-label="Wax seal" title="Wax seal">
-              <WaxSeal className="w-6 h-6" />
+              <WaxSealToolbarIcon />
             </button>
           </div>
           {openPanel === "color" && (

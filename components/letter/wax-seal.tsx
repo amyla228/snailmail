@@ -6,6 +6,7 @@ interface WaxSealProps {
   className?: string
 }
 
+/** Circular wax seal (no map-pin shape). Use for placed seals and optional toolbar icon. */
 export function WaxSeal({ className }: WaxSealProps) {
   return (
     <div
@@ -18,8 +19,19 @@ export function WaxSeal({ className }: WaxSealProps) {
       aria-hidden
     >
       <svg viewBox="0 0 24 24" className="w-6 h-6 text-white/90" fill="currentColor">
-        <path d="M12 2C8.5 2 6 4.5 6 8c0 2.5 1.5 5 6 10 4.5-5 6-7.5 6-10 0-3.5-2.5-6-6-6zm0 8.5c-1.4 0-2.5-1.1-2.5-2.5S10.6 5.5 12 5.5s2.5 1.1 2.5 2.5-1.1 2.5-2.5 2.5z" />
+        <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" strokeWidth="1.2" opacity="0.9" />
+        <path d="M12 6v4l2 6 2-6 2 4" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" opacity="0.9" />
       </svg>
     </div>
+  )
+}
+
+/** Small circular seal icon for toolbar only (no map pin). */
+export function WaxSealToolbarIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className={cn("w-5 h-5 text-foreground", className)} fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="8" />
+      <path d="M12 8v2l1.5 4 1.5-4 1.5 2" />
+    </svg>
   )
 }
